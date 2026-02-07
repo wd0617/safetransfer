@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeTransfer - Sistema de Compliance para Money Transfer</title>
+    <meta name="description" content="Gestiona tus transferencias de dinero cumpliendo con la normativa italiana. Límites automáticos, verificación cross-business y reportes de compliance.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --gray: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 6rem 2rem 4rem;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdf4 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--dark), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-content p {
+            font-size: 1.25rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .hero-image {
+            position: relative;
+        }
+
+        .hero-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: perspective(1000px) rotateY(-5deg) rotateX(5deg) translateY(0); }
+            50% { transform: perspective(1000px) rotateY(-5deg) rotateX(5deg) translateY(-20px); }
+        }
+
+        .status-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f0fdf4;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .status-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .status-blocked {
+            background: #fee2e2;
+        }
+
+        .status-blocked .status-icon {
+            background: #ef4444;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 2rem;
+            background: white;
+        }
+
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            font-size: 1.125rem;
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            border-radius: 16px;
+            background: var(--light);
+            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--gray);
+        }
+
+        /* Privacy Section */
+        .privacy {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%);
+            color: white;
+        }
+
+        .privacy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .privacy-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .privacy-content p {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        .privacy-list {
+            list-style: none;
+        }
+
+        .privacy-list li {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+
+        .privacy-list .check {
+            color: var(--secondary);
+            font-size: 1.25rem;
+        }
+
+        .privacy-visual {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .privacy-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .privacy-card.visible {
+            border-color: var(--secondary);
+        }
+
+        .privacy-card.hidden {
+            border-color: #ef4444;
+            opacity: 0.7;
+        }
+
+        .privacy-card h4 {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .privacy-card p {
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 6rem 2rem;
+            background: var(--light);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .pricing-card.popular {
+            border-color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: 0 25px 50px rgba(59, 130, 246, 0.2);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-card .price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-card .price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--gray);
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .pricing-features .check {
+            color: var(--secondary);
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .cta .btn {
+            background: white;
+            color: var(--primary);
+            font-size: 1.125rem;
+            padding: 1rem 2.5rem;
+        }
+
+        .cta .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 2rem;
+            background: var(--dark);
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        footer p {
+            margin-bottom: 1rem;
+        }
+
+        footer .legal {
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-container,
+            .privacy-grid,
+            .features-grid,
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .pricing-card.popular {
+                transform: none;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">SafeTransfer</div>
+            <ul class="nav-links">
+                <li><a href="#features">Funcionalidades</a></li>
+                <li><a href="#privacy">Privacidad</a></li>
+                <li><a href="#pricing">Precios</a></li>
+            </ul>
+            <a href="/app" class="btn btn-primary">Acceder</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Gestiona transferencias con total seguridad legal</h1>
+                <p>Sistema de compliance para negocios de money transfer. Cumple con la normativa italiana (D.Lgs 231/2007) y protege los datos de tus clientes.</p>
+                <div class="hero-buttons">
+                    <a href="#pricing" class="btn btn-primary">Comenzar Gratis</a>
+                    <a href="#features" class="btn btn-secondary">Ver Demo</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="hero-card">
+                    <div class="status-card">
+                        <div class="status-icon">✓</div>
+                        <div>
+                            <strong>Cliente Verificado</strong>
+                            <p style="margin:0; font-size: 0.875rem; color: var(--gray);">Disponible: €450.00</p>
+                        </div>
+                    </div>
+                    <div class="status-card status-blocked">
+                        <div class="status-icon">⏳</div>
+                        <div>
+                            <strong>Límite Alcanzado</strong>
+                            <p style="margin:0; font-size: 0.875rem; color: var(--gray);">Disponible en: 3 días</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: var(--gray);">Usado esta semana</span>
+                            <strong>€549.00</strong>
+                        </div>
+                        <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div style="width: 55%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 4px;"></div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.75rem; color: var(--gray); margin-top: 0.25rem;">55% del límite de €999</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Todo lo que necesitas para cumplir la normativa</h2>
+                <p>Funcionalidades diseñadas específicamente para negocios de money transfer en Italia</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Límites Automáticos</h3>
+                    <p>Control automático del límite de €999 por cliente cada 8 días, según D.Lgs 231/2007.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Verificación Cross-Business</h3>
+                    <p>Sabe si tu cliente ha enviado en otros locales, respetando siempre la privacidad.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Reportes de Compliance</h3>
+                    <p>Genera reportes listos para auditorías y cumplimiento normativo.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>Multi-idioma</h3>
+                    <p>Disponible en Español, Italiano, Inglés, Francés, Hindi y Urdu.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Gestión de Clientes</h3>
+                    <p>Base de datos completa con documentos, código fiscal y datos de contacto.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Alertas en Tiempo Real</h3>
+                    <p>Notificaciones instantáneas cuando un cliente se acerca al límite.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy Section -->
+    <section class="privacy" id="privacy">
+        <div class="section-container">
+            <div class="privacy-grid">
+                <div class="privacy-content">
+                    <h2>Privacidad por diseño (GDPR)</h2>
+                    <p>Comparte información de compliance sin revelar datos sensibles de otros negocios.</p>
+                    <ul class="privacy-list">
+                        <li><span class="check">✓</span> Solo ves si el cliente puede transferir</li>
+                        <li><span class="check">✓</span> No ves en qué negocios envió antes</li>
+                        <li><span class="check">✓</span> No ves montos individuales de otros</li>
+                        <li><span class="check">✓</span> No ves destinos ni destinatarios</li>
+                        <li><span class="check">✓</span> Auditoría completa de cada consulta</li>
+                    </ul>
+                </div>
+                <div class="privacy-visual">
+                    <div class="privacy-card visible">
+                        <h4>✓ Visible</h4>
+                        <p>Puede transferir: Sí</p>
+                    </div>
+                    <div class="privacy-card visible">
+                        <h4>✓ Visible</h4>
+                        <p>Monto usado: €549</p>
+                    </div>
+                    <div class="privacy-card visible">
+                        <h4>✓ Visible</h4>
+                        <p>Días restantes: 3</p>
+                    </div>
+                    <div class="privacy-card visible">
+                        <h4>✓ Visible</h4>
+                        <p>Disponible: €450</p>
+                    </div>
+                    <div class="privacy-card hidden">
+                        <h4>✗ Oculto</h4>
+                        <p>Nombres de negocios</p>
+                    </div>
+                    <div class="privacy-card hidden">
+                        <h4>✗ Oculto</h4>
+                        <p>Montos individuales</p>
+                    </div>
+                    <div class="privacy-card hidden">
+                        <h4>✗ Oculto</h4>
+                        <p>Países de destino</p>
+                    </div>
+                    <div class="privacy-card hidden">
+                        <h4>✗ Oculto</h4>
+                        <p>Destinatarios</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Planes simples y transparentes</h2>
+                <p>Elige el plan que mejor se adapte a tu negocio</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Basic</h3>
+                    <div class="price">€29<span>/mes</span></div>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> 1 usuario</li>
+                        <li><span class="check">✓</span> Gestión de clientes</li>
+                        <li><span class="check">✓</span> Verificación de límites</li>
+                        <li><span class="check">✓</span> Reportes básicos</li>
+                        <li><span class="check">✓</span> Soporte por email</li>
+                    </ul>
+                    <a href="/app" class="btn btn-secondary" style="width: 100%; text-align: center;">Comenzar</a>
+                </div>
+                <div class="pricing-card popular">
+                    <div class="popular-badge">Más Popular</div>
+                    <h3>Pro</h3>
+                    <div class="price">€49<span>/mes</span></div>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> 5 usuarios</li>
+                        <li><span class="check">✓</span> Todo en Basic</li>
+                        <li><span class="check">✓</span> Reportes avanzados</li>
+                        <li><span class="check">✓</span> Alertas personalizadas</li>
+                        <li><span class="check">✓</span> Soporte prioritario</li>
+                    </ul>
+                    <a href="/app" class="btn btn-primary" style="width: 100%; text-align: center;">Comenzar</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">€99<span>/mes</span></div>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> Usuarios ilimitados</li>
+                        <li><span class="check">✓</span> Todo en Pro</li>
+                        <li><span class="check">✓</span> API access</li>
+                        <li><span class="check">✓</span> Integraciones</li>
+                        <li><span class="check">✓</span> Soporte 24/7</li>
+                    </ul>
+                    <a href="/app" class="btn btn-secondary" style="width: 100%; text-align: center;">Contactar</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="section-container">
+            <h2>Comienza tu prueba gratuita de 14 días</h2>
+            <p>Sin tarjeta de crédito. Sin compromiso. Cancela cuando quieras.</p>
+            <a href="/app" class="btn">Crear Cuenta Gratis</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="section-container">
+            <p><strong>SafeTransfer</strong> - Sistema de Compliance para Money Transfer</p>
+            <p class="legal">Diseñado para cumplir con D.Lgs 231/2007 (Italia) y GDPR</p>
+            <p style="font-size: 0.75rem; margin-top: 1rem;">© 2024 SafeTransfer. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+</body>
+</html>
