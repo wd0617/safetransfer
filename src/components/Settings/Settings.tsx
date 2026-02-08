@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save } from 'lucide-react';
+import { Save, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTranslation, Language } from '../../lib/i18n';
 import { Database } from '../../lib/database.types';
@@ -20,6 +20,9 @@ export function Settings({ business, businessUser, language, onLanguageChange, o
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const [businessData, setBusinessData] = useState({
     name: business.name,
@@ -33,6 +36,14 @@ export function Settings({ business, businessUser, language, onLanguageChange, o
     full_name: businessUser.full_name,
     language: businessUser.language,
   });
+
+  const [passwordData, setPasswordData] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSaveBusiness = async () => {
     setLoading(true);
@@ -78,6 +89,43 @@ export function Settings({ business, businessUser, language, onLanguageChange, o
       setError(err.message || 'Error updating profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordLoading(true);
+    setPasswordError('');
+    setPasswordSuccess(false);
+
+    try {
+      // Validaciones
+      if (!passwordData.newPassword || !passwordData.confirmPassword) {
+        throw new Error(language === 'es' ? 'Por favor complete ambos campos' : 'Please fill in both fields');
+      }
+
+      if (passwordData.newPassword.length < 6) {
+        throw new Error(language === 'es' ? 'La contraseña debe tener al menos 6 caracteres' : 'Password must be at least 6 characters');
+      }
+
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        throw new Error(language === 'es' ? 'Las contraseñas no coinciden' : 'Passwords do not match');
+      }
+
+      // Cambiar contraseña en Supabase Auth
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) throw error;
+
+      setPasswordSuccess(true);
+      setPasswordData({ newPassword: '', confirmPassword: '' });
+      setTimeout(() => setPasswordSuccess(false), 5000);
+    } catch (err: any) {
+      console.error('Password change error:', err);
+      setPasswordError(err.message || 'Error changing password');
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -149,6 +197,87 @@ export function Settings({ business, businessUser, language, onLanguageChange, o
           >
             <Save className="w-4 h-4" />
             {loading ? t('common.loading') : t('settings.save')}
+          </button>
+        </div>
+      </div>
+
+      {/* Sección de Cambio de Contraseña */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h2 className="text-xl font-semibold text-slate-900 mb-6 flex items-center gap-2">
+          <Lock className="w-5 h-5" />
+          {language === 'es' ? 'Cambiar Contraseña' :
+            language === 'it' ? 'Cambia Password' : 'Change Password'}
+        </h2>
+
+        {passwordError && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {passwordError}
+          </div>
+        )}
+
+        {passwordSuccess && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+            {language === 'es' ? '¡Contraseña cambiada exitosamente!' :
+              language === 'it' ? 'Password modificata con successo!' : 'Password changed successfully!'}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              {language === 'es' ? 'Nueva Contraseña' :
+                language === 'it' ? 'Nuova Password' : 'New Password'}
+            </label>
+            <div className="relative">
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                placeholder={language === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters'}
+                className="w-full px-4 py-2 pr-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+              >
+                {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              {language === 'es' ? 'Confirmar Nueva Contraseña' :
+                language === 'it' ? 'Conferma Nuova Password' : 'Confirm New Password'}
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                placeholder={language === 'es' ? 'Repetir contraseña' : 'Repeat password'}
+                className="w-full px-4 py-2 pr-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+              >
+                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={handleChangePassword}
+            disabled={passwordLoading || !passwordData.newPassword || !passwordData.confirmPassword}
+            className="flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Lock className="w-4 h-4" />
+            {passwordLoading ? t('common.loading') :
+              (language === 'es' ? 'Cambiar Contraseña' :
+                language === 'it' ? 'Cambia Password' : 'Change Password')}
           </button>
         </div>
       </div>
