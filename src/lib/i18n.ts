@@ -1634,7 +1634,7 @@ export const translations = {
 export function useTranslation(language: Language) {
   return {
     t: (key: string, params?: Record<string, string | number>) => {
-      let text = translations[language][key as keyof typeof translations['es']] || key;
+      let text = (translations[language] as Record<string, string>)[key] || key;
 
       if (params) {
         Object.entries(params).forEach(([param, value]) => {

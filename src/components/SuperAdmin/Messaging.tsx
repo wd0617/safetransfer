@@ -1,10 +1,24 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, Send, Mail } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { Database } from '../../lib/database.types';
 
-type Business = Database['public']['Tables']['businesses']['Row'];
-type AdminMessage = Database['public']['Tables']['admin_messages']['Row'];
+
+type Business = {
+  id: string;
+  name: string;
+  email: string;
+  status?: string | null;
+};
+type AdminMessage = {
+  id: string;
+  business_id: string | null;
+  sender_id: string | null;
+  subject: string;
+  message: string;
+  message_type: string;
+  is_read: boolean | null;
+  sent_at?: string | null;
+};
 
 interface MessagingProps {
   selectedBusinessId?: string;
@@ -153,7 +167,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
               </label>
               <select
                 value={messageType}
-                onChange={(e) => setMessageType(e.target.value as any)}
+                onChange={(e) => setMessageType(e.target.value as 'info' | 'warning' | 'alert' | 'notice')}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="info">Information</option>
@@ -229,7 +243,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
                   <p className="text-sm text-slate-600 line-clamp-2">{msg.message}</p>
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                     <p className="text-xs text-slate-500">
-                      {new Date(msg.sent_at).toLocaleString()}
+                      {msg.sent_at ? new Date(msg.sent_at).toLocaleString() : '-'}
                     </p>
                     {msg.is_read && (
                       <span className="text-xs text-green-600 font-medium">Read</span>

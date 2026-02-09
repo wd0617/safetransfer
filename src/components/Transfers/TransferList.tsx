@@ -2,9 +2,18 @@ import { useEffect, useState } from 'react';
 import { Plus, Calendar, DollarSign, CreditCard, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTranslation, Language } from '../../lib/i18n';
-import { Database } from '../../lib/database.types';
-
-type Transfer = Database['public']['Tables']['transfers']['Row'] & {
+type Transfer = {
+  id: string;
+  amount: number;
+  destination_country: string;
+  recipient_name: string;
+  status: 'completed' | 'pending' | 'cancelled';
+  transfer_date: string;
+  next_allowed_date: string;
+  commission_amount: number | null;
+  commission_included: boolean | null;
+  net_amount: number | null;
+  transfer_system: string | null;
   clients?: { full_name: string; document_number: string; id: string };
 };
 
@@ -31,15 +40,20 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
     loadTransfers();
   }, [businessId]);
 
-  const checkClientEligibility = async (clientId: string): Promise<ClientEligibility | null> => {
+  const checkClientEligibility = async (documentNumber: string): Promise<ClientEligibility | null> => {
     try {
-      const { data, error } = await supabase.rpc('check_transfer_eligibility', {
-        p_client_id: clientId,
-        p_amount: 0,
+      const { data, error } = await (supabase.rpc as any)('check_transfer_eligibility_private', {
+        p_document_number: documentNumber,
+        p_checking_business_id: businessId,
+        p_checked_by_user_id: '',
+        p_requested_amount: 0,
       });
 
       if (error) throw error;
-      return data;
+      if (Array.isArray(data) && data.length > 0) {
+        return data[0] as ClientEligibility;
+      }
+      return null;
     } catch (error) {
       console.error('Error checking eligibility:', error);
       return null;
@@ -50,21 +64,29 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
     try {
       const { data, error } = await supabase
         .from('transfers')
-        .select('*, clients(full_name, document_number)')
+        .select('*, clients(full_name, document_number, id)')
         .eq('business_id', businessId)
         .order('transfer_date', { ascending: false })
         .limit(100);
 
       if (error) throw error;
-      setTransfers(data || []);
+      setTransfers((data || []) as unknown as Transfer[]);
 
       // Load eligibility for unique clients
-      const uniqueClientIds = [...new Set((data || []).map(t => t.clients?.id).filter(Boolean))] as string[];
+      const clientMap = new Map<string, string>();
+      ((data || []) as any[]).forEach((t) => {
+        if (t.clients?.id && t.clients?.document_number) {
+          clientMap.set(t.clients.id, t.clients.document_number);
+        }
+      });
+      const uniqueClientIds = [...clientMap.keys()];
       const eligibilityData: Record<string, ClientEligibility> = {};
 
       await Promise.all(
         uniqueClientIds.map(async (clientId) => {
-          const eligibility = await checkClientEligibility(clientId);
+          const docNumber = clientMap.get(clientId);
+          if (!docNumber) return;
+          const eligibility = await checkClientEligibility(docNumber);
           if (eligibility) {
             eligibilityData[clientId] = eligibility;
           }
@@ -176,13 +198,13 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
                         <DollarSign className="w-4 h-4 text-slate-400" />€
                         {transfer.amount.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                       </div>
-                      {(transfer as any).commission_amount > 0 && (
+                      {transfer.commission_amount != null && transfer.commission_amount > 0 && (
                         <div className="text-xs text-slate-500 mt-1">
-                          Com: €{((transfer as any).commission_amount || 0).toFixed(2)}{' '}
- {(transfer as any).commission_included ? '(incluida)' : '(aparte)'}
+                          Com: €{(transfer.commission_amount).toFixed(2)}{' '}
+                          {transfer.commission_included ? '(incluida)' : '(aparte)'}
                           <br />
                           <span className="font-medium text-blue-600">
-                            Neto: €{((transfer as any).net_amount || transfer.amount).toFixed(2)}
+                            Neto: €{(transfer.net_amount ?? transfer.amount).toFixed(2)}
                           </span>
                         </div>
                       )}
@@ -191,10 +213,10 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
                       <span className="text-sm text-slate-600">{transfer.destination_country}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {(transfer as any).transfer_system ? (
+                      {transfer.transfer_system ? (
                         <div className="flex items-center gap-1 text-sm text-blue-600 font-medium">
                           <CreditCard className="w-4 h-4" />
-                          {t(`transferSystem.${(transfer as any).transfer_system}`)}
+                          {t(`transferSystem.${transfer.transfer_system}`)}
                         </div>
                       ) : (
                         <span className="text-xs text-slate-400">-</span>

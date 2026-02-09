@@ -1,0 +1,335 @@
+{
+    "info": {
+        "source": "PythonAnywhere Sistema_Control_Transferencias",
+        "backup_date": "2026-01-30",
+        "total_clients": 753
+    },
+    "servicios": [
+        {
+            "id": 1,
+            "nombre": "Western Union"
+        },
+        {
+            "id": 2,
+            "nombre": "MoneyGram"
+        },
+        {
+            "id": 3,
+            "nombre": "Ria Money Transfer"
+        },
+        {
+            "id": 4,
+            "nombre": "Mondial Bony"
+        },
+        {
+            "id": 5,
+            "nombre": "Monty"
+        }
+    ],
+    "clientes": [
+        {
+            "id": 1,
+            "nombre": "Wander",
+            "apellido": "Perez",
+            "fecha_nacimiento": "1994-09-06",
+            "documento": "ax12345",
+            "telefono": "23421234",
+            "fecha_registro": "2025-03-20 10:57:10",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 2,
+            "nombre": "ORNELA",
+            "apellido": "GJYLA",
+            "fecha_nacimiento": "1987-04-12",
+            "documento": "ca23306db",
+            "telefono": "3208868204",
+            "fecha_registro": "2025-03-20 12:18:43",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 3,
+            "nombre": "SANDY TEOLINDA",
+            "apellido": "COTRINA SAVA",
+            "fecha_nacimiento": "1980-12-16",
+            "documento": "CA00522MJ",
+            "telefono": "3297519493",
+            "fecha_registro": "2025-03-20 12:49:38",
+            "servicios": [
+                1,
+                4
+            ]
+        },
+        {
+            "id": 4,
+            "nombre": "ANTONIO",
+            "apellido": "RAFANAN",
+            "fecha_nacimiento": "1970-01-17",
+            "documento": "CA19308SZ",
+            "telefono": "3921651555",
+            "fecha_registro": "2025-03-20 12:53:19",
+            "servicios": [
+                4
+            ]
+        },
+        {
+            "id": 5,
+            "nombre": "INGA",
+            "apellido": "PEIKRISHVILI",
+            "fecha_nacimiento": "1972-12-11",
+            "documento": "av9260670",
+            "telefono": "3804931558",
+            "fecha_registro": "2025-03-20 13:04:13",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 6,
+            "nombre": "MONICA",
+            "apellido": "ALVAREZ HUAMAN",
+            "fecha_nacimiento": "1978-10-27",
+            "documento": "220071631",
+            "telefono": "3475568925",
+            "fecha_registro": "2025-03-20 13:04:42",
+            "servicios": [
+                4
+            ]
+        },
+        {
+            "id": 7,
+            "nombre": "DINA",
+            "apellido": "MERKVILISHVILI",
+            "fecha_nacimiento": "1975-07-28",
+            "documento": "ca39596uf",
+            "telefono": "3395697273",
+            "fecha_registro": "2025-03-20 13:09:24",
+            "servicios": [
+                3
+            ]
+        },
+        {
+            "id": 8,
+            "nombre": "RUTH MARYURI",
+            "apellido": "JURADO GOMEZ",
+            "fecha_nacimiento": "1982-01-24",
+            "documento": "ca20977nb",
+            "telefono": "3891608989",
+            "fecha_registro": "2025-03-20 13:13:51",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 9,
+            "nombre": "ELIZABETH ROSMERY",
+            "apellido": "RAMOS GOMEZ",
+            "fecha_nacimiento": "1993-02-14",
+            "documento": "221048719",
+            "telefono": "3890697525",
+            "fecha_registro": "2025-03-20 13:21:28",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 10,
+            "nombre": "TEA",
+            "apellido": "SIDAMONIDZE",
+            "fecha_nacimiento": "1974-01-12",
+            "documento": "15BA81670",
+            "telefono": "3806986305",
+            "fecha_registro": "2025-03-20 13:26:03",
+            "servicios": [
+                3
+            ]
+        },
+        {
+            "id": 11,
+            "nombre": "DALI",
+            "apellido": "KOROGHLISHVILI",
+            "fecha_nacimiento": "1976-06-27",
+            "documento": "ca55454oc",
+            "telefono": "3806970413",
+            "fecha_registro": "2025-03-20 13:29:31",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 12,
+            "nombre": "FRANCISCO",
+            "apellido": "ALVAREZ",
+            "fecha_nacimiento": "1980-10-20",
+            "documento": "av8620649",
+            "telefono": "3890378201",
+            "fecha_registro": "2025-03-20 13:37:19",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 13,
+            "nombre": "TEA",
+            "apellido": "DOLIDZE",
+            "fecha_nacimiento": "1985-01-26",
+            "documento": "ay8411052",
+            "telefono": "3476923632",
+            "fecha_registro": "2025-03-20 13:41:53",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 14,
+            "nombre": "NANA",
+            "apellido": "DOLIDZE",
+            "fecha_nacimiento": "1971-10-02",
+            "documento": "21ab32566",
+            "telefono": "240970270",
+            "fecha_registro": "2025-03-20 13:43:15",
+            "servicios": [
+                1,
+                3
+            ]
+        },
+        {
+            "id": 15,
+            "nombre": "EKA",
+            "apellido": "ACHUASHVILI",
+            "fecha_nacimiento": "1971-02-14",
+            "documento": "15AA02926",
+            "telefono": "3203352664",
+            "fecha_registro": "2025-03-20 13:46:59",
+            "servicios": [
+                3
+            ]
+        },
+        {
+            "id": 16,
+            "nombre": "ALEXANDER JESUS",
+            "apellido": "GOMEZ RODRIGUEZ",
+            "fecha_nacimiento": "1996-03-29",
+            "documento": "122173619",
+            "telefono": "3289543635",
+            "fecha_registro": "2025-03-20 14:00:02",
+            "servicios": [
+                4
+            ]
+        },
+        {
+            "id": 17,
+            "nombre": "MAIA",
+            "apellido": "VASHAKIDZE",
+            "fecha_nacimiento": "1980-12-19",
+            "documento": "23AC76873",
+            "telefono": "3926504025",
+            "fecha_registro": "2025-03-20 14:17:02",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 18,
+            "nombre": "RUSUDAN",
+            "apellido": "ABESALASHVILI",
+            "fecha_nacimiento": "1962-03-14",
+            "documento": "24IA44875",
+            "telefono": "3200767047",
+            "fecha_registro": "2025-03-20 14:18:14",
+            "servicios": [
+                3
+            ]
+        },
+        {
+            "id": 19,
+            "nombre": "INGA",
+            "apellido": "GAGANADZE",
+            "fecha_nacimiento": "1972-06-22",
+            "documento": "CA48848HP",
+            "telefono": "3270143453",
+            "fecha_registro": "2025-03-20 14:28:06",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 20,
+            "nombre": "NOEMI JUDITH",
+            "apellido": "VILLAJUAN BONILLA",
+            "fecha_nacimiento": "1977-12-28",
+            "documento": "ax5073547",
+            "telefono": "3202721263",
+            "fecha_registro": "2025-03-21 12:23:41",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 21,
+            "nombre": "CESAR JR",
+            "apellido": "MONCADA SILVA",
+            "fecha_nacimiento": "1967-10-06",
+            "documento": "ca24324ux",
+            "telefono": "3891604474",
+            "fecha_registro": "2025-03-21 12:32:21",
+            "servicios": [
+                1,
+                4
+            ]
+        },
+        {
+            "id": 22,
+            "nombre": "SOPIKO",
+            "apellido": "ROBAKIDZE",
+            "fecha_nacimiento": "1981-03-02",
+            "documento": "CA34834QT",
+            "telefono": "3773454202",
+            "fecha_registro": "2025-03-21 12:54:36",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 23,
+            "nombre": "JHENY MARIVEL",
+            "apellido": "PEREZ PANTOJA",
+            "fecha_nacimiento": "1981-05-11",
+            "documento": "219040872",
+            "telefono": "3275568234",
+            "fecha_registro": "2025-03-21 12:58:50",
+            "servicios": [
+                5
+            ]
+        },
+        {
+            "id": 24,
+            "nombre": "ELENA",
+            "apellido": "MARARU",
+            "fecha_nacimiento": "1981-12-23",
+            "documento": "CA61974LS",
+            "telefono": "3214569875",
+            "fecha_registro": "2025-03-21 13:04:12",
+            "servicios": [
+                1
+            ]
+        },
+        {
+            "id": 25,
+            "nombre": "NATELA",
+            "apellido": "ZUKAKISHVILI KUSHITASHVILI",
+            "fecha_nacimiento": "1961-02-05",
+            "documento": "CA12707NP",
+            "telefono": "3716775381",
+            "fecha_registro": "2025-03-21 13:21:11",
+            "servicios": [
+                1
+            ]
+        }
+    ],
+    "note": "Esta es una muestra parcial. El archivo completo contiene los 753 clientes del backup."
+}

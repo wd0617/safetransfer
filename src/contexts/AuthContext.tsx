@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { Database } from '../lib/database.types';
 import {
   logFailedLoginAttempt,
   isAccountLocked,
@@ -9,9 +8,32 @@ import {
   trackSession,
 } from '../lib/security';
 
-type BusinessUser = Database['public']['Tables']['business_users']['Row'];
-type Business = Database['public']['Tables']['businesses']['Row'];
-type Subscription = Database['public']['Tables']['subscriptions']['Row'];
+type BusinessUser = {
+  id: string;
+  business_id: string;
+  user_id: string;
+  role: 'admin' | 'operator';
+  full_name: string;
+  email: string;
+  language?: 'es' | 'en' | 'it' | 'hi' | 'ur';
+  is_active: boolean;
+  is_superadmin?: boolean | null;
+  must_change_password?: boolean | null;
+};
+type Business = {
+  id: string;
+  name: string;
+  status?: 'active' | 'trial' | 'blocked' | 'inactive' | null;
+  [key: string]: unknown;
+};
+type Subscription = {
+  id: string;
+  business_id: string;
+  status?: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
+  is_trial?: boolean | null;
+  trial_end_date?: string | null;
+  next_payment_date?: string | null;
+};
 
 interface AuthContextType {
   user: User | null;
@@ -42,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserData = async (userId: string) => {
     try {
-      console.log('Loading user data for:', userId);
+      if (import.meta.env.DEV) console.log('Loading user data for:', userId);
       const { data: buData, error: buError } = await supabase
         .from('business_users')
         .select('*')
@@ -50,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('is_active', true)
         .maybeSingle();
 
-      console.log('Business user data:', buData, 'Error:', buError);
+      if (import.meta.env.DEV) console.log('Business user data:', buData, 'Error:', buError);
 
       if (buError) throw buError;
 
@@ -65,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('id', buData.business_id)
           .maybeSingle();
 
-        console.log('Business data:', bizData, 'Error:', bizError);
+        if (import.meta.env.DEV) console.log('Business data:', bizData, 'Error:', bizError);
 
         if (bizError) throw bizError;
         setBusiness(bizData);
@@ -77,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq('business_id', bizData.id)
             .maybeSingle();
 
-          console.log('Subscription data:', subData, 'Error:', subError);
+          if (import.meta.env.DEV) console.log('Subscription data:', subData, 'Error:', subError);
 
           if (subError) {
             console.error('Error loading subscription:', subError);
@@ -89,14 +111,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsBusinessBlocked(blocked);
 
             if (blocked) {
-              console.warn('Business is blocked or inactive:', bizData.status);
+              if (import.meta.env.DEV) console.warn('Business is blocked or inactive:', bizData.status);
             }
           } else {
             setIsBusinessBlocked(false);
           }
         }
       } else {
-        console.warn('No business user found for user ID:', userId);
+        if (import.meta.env.DEV) console.warn('No business user found for user ID:', userId);
         setIsBusinessBlocked(false);
       }
     } catch (error) {
@@ -193,7 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError) throw authError;
       if (!authData.user) throw new Error('User creation failed');
 
-      const { data: functionData, error: functionError } = await supabase
+      const { error: functionError } = await supabase
         .rpc('create_business_and_user', {
           p_business_name: businessName,
           p_business_email: email,

@@ -10,7 +10,7 @@ function AppContent() {
   const { language, setLanguage } = useApp();
 
   useEffect(() => {
-    console.log('App state:', { user: !!user, businessUser: !!businessUser, loading, mustChangePassword });
+    if (import.meta.env.DEV) console.log('App state:', { user: !!user, businessUser: !!businessUser, loading, mustChangePassword });
   }, [user, businessUser, loading, mustChangePassword]);
 
   if (loading) {
@@ -41,7 +41,7 @@ function AppContent() {
 
 function App() {
   useEffect(() => {
-    console.log('App mounted');
+    if (import.meta.env.DEV) console.log('App mounted');
   }, []);
 
   return (

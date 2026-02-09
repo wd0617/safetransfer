@@ -9,8 +9,10 @@ import { AuditLog } from './AuditLog';
 import { SecurityMonitoring } from './SecurityMonitoring';
 import { PasswordResetAssistance } from './PasswordResetAssistance';
 
+type ActiveView = 'dashboard' | 'businesses' | 'notifications' | 'messages' | 'audit' | 'security' | 'password-reset';
+
 export function SuperAdminPanel() {
-  const [activeView, setActiveView] = useState<'dashboard' | 'businesses' | 'notifications' | 'messages' | 'audit' | 'security' | 'password-reset'>('dashboard');
+  const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
 
   const renderContent = () => {
@@ -70,7 +72,7 @@ export function SuperAdminPanel() {
     }
   };
 
-  const menuItems = [
+  const menuItems: { id: ActiveView; icon: typeof LayoutDashboard; label: string }[] = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { id: 'businesses', icon: Building2, label: 'Negocios' },
     { id: 'security', icon: Lock, label: 'Seguridad' },
@@ -109,16 +111,15 @@ export function SuperAdminPanel() {
                 <button
                   key={item.id}
                   onClick={() => {
-                    setActiveView(item.id as any);
+                    setActiveView(item.id);
                     if (item.id !== 'businesses') {
                       setSelectedBusinessId(null);
                     }
                   }}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${
-                    isActive
+                  className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${isActive
                       ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                   {item.label}

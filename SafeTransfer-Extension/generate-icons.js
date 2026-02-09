@@ -1,0 +1,40 @@
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const svgContent = `<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0f1c2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#bg)"/>
+  <path d="M64 16L104 32V60C104 88 64 108 64 108C64 108 24 88 24 60V32L64 16Z" stroke="#22c55e" stroke-width="6" fill="none"/>
+  <path d="M48 64L58 74L80 52" stroke="#22c55e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+const sizes = [16, 32, 48, 128];
+
+async function generateIcons() {
+    const iconsDir = path.join(__dirname, 'icons');
+
+    for (const size of sizes) {
+        const outputPath = path.join(iconsDir, `icon${size}.png`);
+
+        await sharp(Buffer.from(svgContent))
+            .resize(size, size)
+            .png()
+            .toFile(outputPath);
+
+        console.log(`Created icon${size}.png`);
+    }
+
+    console.log('All icons generated successfully!');
+}
+
+generateIcons().catch(console.error);

@@ -1,11 +1,32 @@
 import { useEffect, useState } from 'react';
-import { X, User, FileText, Globe, Phone, Calendar as CalendarIcon, CheckCircle, AlertTriangle, Clock, TrendingUp, History, CreditCard } from 'lucide-react';
+import { X, User, CheckCircle, AlertTriangle, Clock, TrendingUp, History, CreditCard } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTranslation, Language } from '../../lib/i18n';
-import { Database } from '../../lib/database.types';
-
-type Client = Database['public']['Tables']['clients']['Row'];
-type Transfer = Database['public']['Tables']['transfers']['Row'];
+type Client = {
+  id: string;
+  full_name: string;
+  document_type: string;
+  document_number: string;
+  nationality: string;
+  birth_date?: string;
+  date_of_birth?: string;
+  phone?: string | null;
+  email?: string | null;
+  fiscal_code?: string | null;
+  transfer_systems?: string[] | null;
+};
+type Transfer = {
+  id: string;
+  client_id: string;
+  amount: number;
+  destination_country: string;
+  status: 'completed' | 'pending' | 'cancelled';
+  transfer_date: string;
+  commission_amount: number | null;
+  commission_included: boolean | null;
+  net_amount: number | null;
+  transfer_system: string | null;
+};
 
 interface ClientEligibility {
   can_transfer: boolean;
@@ -29,7 +50,7 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
   const [eligibility, setEligibility] = useState<ClientEligibility | null>(null);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [daysRemaining, setDaysRemaining] = useState<number>(0);
+
 
   useEffect(() => {
     loadClientData();
@@ -38,7 +59,7 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
   const loadClientData = async () => {
     try {
       const [eligibilityResult, transfersResult] = await Promise.all([
-        supabase.rpc('check_transfer_eligibility_private', {
+        (supabase.rpc as any)('check_transfer_eligibility_private', {
           p_document_number: client.document_number,
           p_checking_business_id: businessId,
           p_checked_by_user_id: userId,
@@ -55,14 +76,14 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
       if (eligibilityResult.error) throw eligibilityResult.error;
       if (transfersResult.error) throw transfersResult.error;
 
-      if (eligibilityResult.data && eligibilityResult.data.length > 0) {
-        setEligibility(eligibilityResult.data[0]);
-        setDaysRemaining(eligibilityResult.data[0].days_remaining || 0);
+      const eligData = eligibilityResult.data;
+      if (Array.isArray(eligData) && eligData.length > 0) {
+        setEligibility(eligData[0] as ClientEligibility);
       }
 
-      setTransfers(transfersResult.data || []);
+      setTransfers((transfersResult.data || []) as Transfer[]);
 
-      calculateDaysRemaining(transfersResult.data || []);
+
     } catch (error) {
       console.error('Error loading client data:', error);
     } finally {
@@ -70,40 +91,10 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
     }
   };
 
-  const calculateDaysRemaining = (clientTransfers: Transfer[]) => {
-    if (!clientTransfers || clientTransfers.length === 0) {
-      setDaysRemaining(0);
-      return;
-    }
 
-    const now = new Date();
-    const eightDaysAgo = new Date(now);
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
 
-    const recentTransfers = clientTransfers.filter(t => {
-      const transferDate = new Date(t.transfer_date);
-      return t.status === 'completed' && transferDate >= eightDaysAgo;
-    });
-
-    if (recentTransfers.length === 0) {
-      setDaysRemaining(0);
-      return;
-    }
-
-    const oldestTransferDate = new Date(
-      Math.min(...recentTransfers.map(t => new Date(t.transfer_date).getTime()))
-    );
-
-    const nextAvailableDate = new Date(oldestTransferDate);
-    nextAvailableDate.setDate(nextAvailableDate.getDate() + 8);
-
-    const diffTime = nextAvailableDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    setDaysRemaining(Math.max(0, diffDays));
-  };
-
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString(language, {
       year: 'numeric',
       month: 'short',
@@ -137,7 +128,7 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
   }
 
   const canTransfer = (eligibility?.amount_available ?? 0) > 0;
-  const isBlocked = !canTransfer && (eligibility?.amount_used ?? 0) >= 999;
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
@@ -155,11 +146,10 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
         <div className="p-4 sm:p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-200px)]">
           {eligibility && (
             <div
-              className={`rounded-xl p-4 sm:p-6 border-2 ${
-                eligibility.can_transfer
-                  ? 'bg-green-50 border-green-200'
-                  : 'bg-red-50 border-red-200'
-              }`}
+              className={`rounded-xl p-4 sm:p-6 border-2 ${eligibility.can_transfer
+                ? 'bg-green-50 border-green-200'
+                : 'bg-red-50 border-red-200'
+                }`}
             >
               <div className="flex flex-col sm:flex-row items-start gap-4">
                 <div className="flex-shrink-0">
@@ -171,27 +161,25 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
                 </div>
                 <div className="flex-grow w-full min-w-0">
                   <h3
-                    className={`text-xl sm:text-2xl font-bold mb-2 break-words ${
-                      eligibility.can_transfer ? 'text-green-900' : 'text-red-900'
-                    }`}
+                    className={`text-xl sm:text-2xl font-bold mb-2 break-words ${eligibility.can_transfer ? 'text-green-900' : 'text-red-900'
+                      }`}
                   >
                     {eligibility.can_transfer
                       ? t('clientDetails.canSendMoney')
                       : 'ENVÍO BLOQUEADO TEMPORALMENTE'}
                   </h3>
                   <p
-                    className={`text-sm mb-4 break-words font-semibold ${
-                      eligibility.can_transfer ? 'text-green-700' : 'text-red-700'
-                    }`}
+                    className={`text-sm mb-4 break-words font-semibold ${eligibility.can_transfer ? 'text-green-700' : 'text-red-700'
+                      }`}
                   >
                     {eligibility.can_transfer ? (
                       <>
-                        Este cliente puede enviar hasta €{eligibility.amount_available.toFixed(2)}.<br/>
+                        Este cliente puede enviar hasta €{eligibility.amount_available.toFixed(2)}.<br />
                         <span className="font-normal">Ha utilizado €{eligibility.amount_used.toFixed(2)} de su límite de €999 en los últimos 8 días.</span>
                       </>
                     ) : (
                       <>
-                        Este cliente NO puede realizar transferencias.<br/>
+                        Este cliente NO puede realizar transferencias.<br />
                         <span className="font-normal">
                           Ha alcanzado el límite máximo de €999 en los últimos 8 días.
                           {eligibility.days_remaining > 0 && (
@@ -274,14 +262,14 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
             </div>
           )}
 
-          {(client as any).transfer_systems && (client as any).transfer_systems.length > 0 && (
+          {client.transfer_systems && client.transfer_systems.length > 0 && (
             <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
               <div className="flex items-center gap-2 mb-4">
                 <CreditCard className="w-5 h-5 text-blue-600" />
                 <h3 className="text-lg font-bold text-blue-900">{t('clients.transferSystems')}</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {(client as any).transfer_systems.map((system: string) => (
+                {client.transfer_systems.map((system: string) => (
                   <span
                     key={system}
                     className="inline-flex items-center px-4 py-2 bg-white border border-blue-300 rounded-lg text-sm font-medium text-blue-900 shadow-sm"
@@ -358,59 +346,58 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
                 transfers.map((transfer) => {
                   const dateInfo = formatDateShort(transfer.transfer_date);
                   return (
-                  <div key={transfer.id} className="px-6 py-4 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-shrink-0">
-                        <div className="flex flex-col items-center justify-center bg-blue-600 text-white rounded-lg px-3 py-2 min-w-[70px] shadow-sm">
-                          <div className="text-2xl font-bold leading-none">{dateInfo.day}</div>
-                          <div className="text-xs font-semibold mt-0.5 leading-none">{dateInfo.month}</div>
-                          <div className="text-xs opacity-90 leading-none mt-0.5">{dateInfo.year}</div>
-                        </div>
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <TrendingUp className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <div className="font-bold text-lg text-slate-900">
-                              {formatAmount(transfer.amount)}
-                            </div>
-                            {(transfer as any).commission_amount > 0 && (
-                              <div className="text-xs text-slate-500 mt-1">
-                                Comisión: €{((transfer as any).commission_amount || 0).toFixed(2)}{' '}
-                                {(transfer as any).commission_included ? '(incluida)' : '(aparte)'}
-                                {' • '}
-                                <span className="font-medium text-blue-600">
-                                  Neto: €{((transfer as any).net_amount || transfer.amount).toFixed(2)}
-                                </span>
-                              </div>
-                            )}
-                            <div className="text-sm text-slate-600">
-                              {t('transfers.to')}: {transfer.destination_country}
-                            </div>
-                            {(transfer as any).transfer_system && (
-                              <div className="text-xs text-blue-600 font-medium mt-1 flex items-center gap-1">
-                                <CreditCard className="w-3 h-3" />
-                                {t(`transferSystem.${(transfer as any).transfer_system}`)}
-                              </div>
-                            )}
+                    <div key={transfer.id} className="px-6 py-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-shrink-0">
+                          <div className="flex flex-col items-center justify-center bg-blue-600 text-white rounded-lg px-3 py-2 min-w-[70px] shadow-sm">
+                            <div className="text-2xl font-bold leading-none">{dateInfo.day}</div>
+                            <div className="text-xs font-semibold mt-0.5 leading-none">{dateInfo.month}</div>
+                            <div className="text-xs opacity-90 leading-none mt-0.5">{dateInfo.year}</div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <span
-                          className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                            transfer.status === 'completed'
+                        <div className="flex-grow min-w-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            <TrendingUp className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <div className="font-bold text-lg text-slate-900">
+                                {formatAmount(transfer.amount)}
+                              </div>
+                              {transfer.commission_amount != null && transfer.commission_amount > 0 && (
+                                <div className="text-xs text-slate-500 mt-1">
+                                  Comisión: €{(transfer.commission_amount).toFixed(2)}{' '}
+                                  {transfer.commission_included ? '(incluida)' : '(aparte)'}
+                                  {' • '}
+                                  <span className="font-medium text-blue-600">
+                                    Neto: €{(transfer.net_amount ?? transfer.amount).toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="text-sm text-slate-600">
+                                {t('transfers.to')}: {transfer.destination_country}
+                              </div>
+                              {transfer.transfer_system && (
+                                <div className="text-xs text-blue-600 font-medium mt-1 flex items-center gap-1">
+                                  <CreditCard className="w-3 h-3" />
+                                  {t(`transferSystem.${transfer.transfer_system}`)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <span
+                            className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${transfer.status === 'completed'
                               ? 'bg-green-100 text-green-800'
                               : transfer.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {t(`transfers.status.${transfer.status}`)}
-                        </span>
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                              }`}
+                          >
+                            {t(`transfers.status.${transfer.status}`)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
                   );
                 })
 

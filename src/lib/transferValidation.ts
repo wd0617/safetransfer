@@ -36,8 +36,8 @@ export async function checkClientEligibilityWithDays(
       throw transfersError;
     }
 
-    const transfers = recentTransfers || [];
-    const totalUsed = transfers.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    const transfers = (recentTransfers || []) as Array<{ amount: number | string; transfer_date: string | null }>;
+    const totalUsed = transfers.reduce((sum: number, t) => sum + Number(t.amount), 0);
     const amountAvailable = Math.max(MAX_AMOUNT_LIMIT - totalUsed, 0);
     const canTransfer = (totalUsed + requestedAmount) <= MAX_AMOUNT_LIMIT;
 
@@ -49,20 +49,25 @@ export async function checkClientEligibilityWithDays(
       const oldest = transfers[0];
       oldestTransferDate = oldest.transfer_date;
 
-      const oldestDate = new Date(oldestTransferDate);
-      const resetDateTime = new Date(oldestDate);
-      resetDateTime.setDate(resetDateTime.getDate() + PERIOD_DAYS);
+      if (oldestTransferDate) {
+        const oldestDate = new Date(oldestTransferDate);
+        const resetDateTime = new Date(oldestDate);
+        resetDateTime.setDate(resetDateTime.getDate() + PERIOD_DAYS);
 
-      resetDate = resetDateTime.toISOString();
+        resetDate = resetDateTime.toISOString();
 
-      const now = new Date();
-      const timeDiff = resetDateTime.getTime() - now.getTime();
-      daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        const now = new Date();
+        const timeDiff = resetDateTime.getTime() - now.getTime();
+        daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
-      if (daysRemaining < 0) daysRemaining = 0;
+        if (daysRemaining < 0) daysRemaining = 0;
+      } else {
+        daysRemaining = 0;
+        resetDate = null;
+      }
     }
 
-    const { data: basicCheck } = await supabase.rpc('check_transfer_eligibility_private', {
+    await supabase.rpc('check_transfer_eligibility_private', {
       p_document_number: documentNumber,
       p_checking_business_id: businessId,
       p_checked_by_user_id: userId,

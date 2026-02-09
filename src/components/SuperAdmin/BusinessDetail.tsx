@@ -1,12 +1,46 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Calendar, CreditCard, Clock, MessageSquare, History, Users, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Users, TrendingUp } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { Database } from '../../lib/database.types';
-
-type Business = Database['public']['Tables']['businesses']['Row'];
-type Subscription = Database['public']['Tables']['subscriptions']['Row'];
-type Payment = Database['public']['Tables']['payments']['Row'];
-type BusinessUser = Database['public']['Tables']['business_users']['Row'];
+type Business = {
+  id: string;
+  name: string;
+  email: string;
+  status?: string | null;
+  contact_name?: string | null;
+  phone?: string | null;
+  transfer_limit?: number | null;
+  created_at: string | null;
+  city?: string | null;
+  country?: string | null;
+};
+type Subscription = {
+  id: string;
+  business_id: string;
+  plan_type?: string | null;
+  status: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
+  is_trial?: boolean | null;
+  trial_start_date?: string | null;
+  trial_end_date?: string | null;
+  next_payment_date?: string | null;
+  monthly_price?: number | null;
+};
+type Payment = {
+  id: string;
+  business_id: string;
+  subscription_id: string | null;
+  amount: number;
+  payment_date: string;
+  due_date: string | null;
+  status: 'pending' | 'paid' | 'failed' | 'refunded';
+};
+type BusinessUser = {
+  id: string;
+  full_name: string;
+  email: string;
+  role: 'admin' | 'operator';
+  is_superadmin?: boolean | null;
+  is_active?: boolean;
+};
 
 interface BusinessDetailProps {
   businessId: string;
@@ -153,7 +187,7 @@ export function BusinessDetail({ businessId, onBack }: BusinessDetailProps) {
       const subData = {
         business_id: businessId,
         plan_type: 'trial',
-        status: 'active',
+        status: 'active' as const,
         is_trial: true,
         trial_start_date: startDate.toISOString(),
         trial_end_date: endDate.toISOString(),
@@ -306,7 +340,7 @@ export function BusinessDetail({ businessId, onBack }: BusinessDetailProps) {
         amount: numAmount,
         payment_date: new Date().toISOString(),
         due_date: new Date().toISOString(),
-        status: 'paid',
+        status: 'paid' as const,
       };
 
       console.log('=== [BusinessDetail] Inserting payment:', paymentData);
@@ -520,41 +554,37 @@ export function BusinessDetail({ businessId, onBack }: BusinessDetailProps) {
           <div className="flex">
             <button
               onClick={() => setActiveTab('info')}
-              className={`px-6 py-3 font-medium ${
-                activeTab === 'info'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-6 py-3 font-medium ${activeTab === 'info'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               Información
             </button>
             <button
               onClick={() => setActiveTab('subscription')}
-              className={`px-6 py-3 font-medium ${
-                activeTab === 'subscription'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-6 py-3 font-medium ${activeTab === 'subscription'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               Suscripción
             </button>
             <button
               onClick={() => setActiveTab('payments')}
-              className={`px-6 py-3 font-medium ${
-                activeTab === 'payments'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-6 py-3 font-medium ${activeTab === 'payments'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               Pagos
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`px-6 py-3 font-medium ${
-                activeTab === 'users'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-6 py-3 font-medium ${activeTab === 'users'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               Usuarios
             </button>
@@ -605,11 +635,11 @@ export function BusinessDetail({ businessId, onBack }: BusinessDetailProps) {
                     <div>
                       <p className="text-xs text-slate-600">Fecha de Creación</p>
                       <p className="font-medium text-slate-900">
-                        {new Date(business.created_at).toLocaleDateString('es-ES', {
+                        {business.created_at ? new Date(business.created_at).toLocaleDateString('es-ES', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
-                        })}
+                        }) : 'N/A'}
                       </p>
                     </div>
                     {business.city && (
@@ -744,11 +774,10 @@ export function BusinessDetail({ businessId, onBack }: BusinessDetailProps) {
                 <button
                   onClick={registerPayment}
                   disabled={processingPayment}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
-                    processingPayment
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700 text-white'
-                  }`}
+                  className={`px-4 py-2 rounded-lg transition-colors ${processingPayment
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700 text-white'
+                    }`}
                 >
                   {processingPayment ? 'Procesando...' : 'Registrar Pago'}
                 </button>
@@ -766,13 +795,12 @@ export function BusinessDetail({ businessId, onBack }: BusinessDetailProps) {
                       </p>
                     </div>
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        payment.status === 'paid'
-                          ? 'bg-green-100 text-green-800'
-                          : payment.status === 'pending'
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${payment.status === 'paid'
+                        ? 'bg-green-100 text-green-800'
+                        : payment.status === 'pending'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-red-100 text-red-800'
-                      }`}
+                        }`}
                     >
                       {payment.status}
                     </span>
@@ -807,11 +835,10 @@ export function BusinessDetail({ businessId, onBack }: BusinessDetailProps) {
                       </div>
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            user.is_active
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${user.is_active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                            }`}
                         >
                           {user.is_active ? 'Activo' : 'Inactivo'}
                         </span>

@@ -72,28 +72,28 @@ export function containsDangerousPatterns(input: string): boolean {
 /**
  * Sanitiza un objeto completo de forma recursiva
  */
-export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
+export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
   if (!obj || typeof obj !== 'object') return obj;
 
-  const sanitized = { ...obj };
+  const sanitized: Record<string, unknown> = { ...obj };
 
   for (const key in sanitized) {
     if (Object.prototype.hasOwnProperty.call(sanitized, key)) {
       const value = sanitized[key];
 
       if (typeof value === 'string') {
-        (sanitized as any)[key] = sanitizeInput(value);
+        sanitized[key] = sanitizeInput(value);
       } else if (Array.isArray(value)) {
-        (sanitized as any)[key] = value.map((item: unknown) =>
+        sanitized[key] = value.map((item: unknown) =>
           typeof item === 'string' ? sanitizeInput(item) : item
         );
       } else if (typeof value === 'object' && value !== null) {
-        (sanitized as any)[key] = sanitizeObject(value);
+        sanitized[key] = sanitizeObject(value as Record<string, unknown>);
       }
     }
   }
 
-  return sanitized;
+  return sanitized as T;
 }
 
 /**

@@ -1,7 +1,15 @@
-import { Database } from './database.types';
-import { useTranslation, Language } from './i18n';
+import { translations, Language } from './i18n';
 
-type Subscription = Database['public']['Tables']['subscriptions']['Row'];
+type Subscription = {
+  id: string;
+  business_id: string;
+  plan?: string | null;
+  status?: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
+  current_period_end?: string | null;
+  is_trial?: boolean | null;
+  trial_end_date?: string | null;
+  next_payment_date?: string | null;
+};
 
 export type SubscriptionStatus =
   | 'trial_active'
@@ -24,8 +32,16 @@ export interface SubscriptionInfo {
 }
 
 export function calculateSubscriptionInfo(subscription: Subscription | null, language: Language = 'es'): SubscriptionInfo {
-  const { t } = useTranslation(language);
-  console.log('=== [subscriptionUtils] calculateSubscriptionInfo called with:', subscription);
+  const t = (key: string, params?: Record<string, string | number>) => {
+    let text = (translations[language] as Record<string, string>)[key] || key;
+    if (params) {
+      Object.entries(params).forEach(([param, value]) => {
+        text = text.replace(`{${param}}`, String(value));
+      });
+    }
+    return text;
+  };
+  if (import.meta.env.DEV) console.log('=== [subscriptionUtils] calculateSubscriptionInfo called with:', subscription);
 
   if (!subscription) {
     return {
@@ -56,7 +72,7 @@ export function calculateSubscriptionInfo(subscription: Subscription | null, lan
     const diffTime = endDate.getTime() - now.getTime();
     daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    console.log('=== [subscriptionUtils] Trial subscription - Days remaining:', daysRemaining);
+    if (import.meta.env.DEV) console.log('=== [subscriptionUtils] Trial subscription - Days remaining:', daysRemaining);
 
     if (daysRemaining <= 0) {
       // Trial expired
@@ -86,7 +102,7 @@ export function calculateSubscriptionInfo(subscription: Subscription | null, lan
     const diffTime = endDate.getTime() - now.getTime();
     daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    console.log('=== [subscriptionUtils] Regular subscription - Days remaining:', daysRemaining);
+    if (import.meta.env.DEV) console.log('=== [subscriptionUtils] Regular subscription - Days remaining:', daysRemaining);
 
     if (daysRemaining <= 0) {
       // Subscription expired
@@ -117,7 +133,7 @@ export function calculateSubscriptionInfo(subscription: Subscription | null, lan
     statusColor = 'text-green-600 bg-green-100';
   }
 
-  console.log('=== [subscriptionUtils] Calculated status:', {
+  if (import.meta.env.DEV) console.log('=== [subscriptionUtils] Calculated status:', {
     status,
     daysRemaining,
     shouldShowNotification,
@@ -160,7 +176,7 @@ export function shouldShowNotificationToday(
     lastShownDate.getMonth() !== now.getMonth() ||
     lastShownDate.getFullYear() !== now.getFullYear();
 
-  console.log('=== [subscriptionUtils] shouldShowNotificationToday:', {
+  if (import.meta.env.DEV) console.log('=== [subscriptionUtils] shouldShowNotificationToday:', {
     businessId,
     lastShown,
     isDifferentDay,
@@ -172,7 +188,7 @@ export function shouldShowNotificationToday(
 export function markNotificationAsShown(businessId: string): void {
   const storageKey = `notification_shown_${businessId}`;
   localStorage.setItem(storageKey, new Date().toISOString());
-  console.log('=== [subscriptionUtils] Notification marked as shown for business:', businessId);
+  if (import.meta.env.DEV) console.log('=== [subscriptionUtils] Notification marked as shown for business:', businessId);
 }
 
 export function getStatusIcon(status: SubscriptionStatus): string {

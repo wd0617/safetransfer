@@ -2,9 +2,15 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTranslation, Language } from '../../lib/i18n';
-import { Database } from '../../lib/database.types';
-
-type Alert = Database['public']['Tables']['legal_alerts']['Row'];
+type Alert = {
+  id: string;
+  business_id: string;
+  alert_type: string;
+  severity: 'info' | 'warning' | 'critical';
+  message: string;
+  is_read: boolean;
+  created_at: string | null;
+};
 
 interface AlertsListProps {
   businessId: string;
@@ -100,21 +106,19 @@ export function AlertsList({ businessId, language }: AlertsListProps) {
         <div className="flex gap-2">
           <button
             onClick={() => setFilter('unread')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'unread'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
+            className={`px-4 py-2 rounded-lg transition-colors ${filter === 'unread'
+              ? 'bg-blue-600 text-white'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
           >
             {t('alerts.unread')}
           </button>
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
+            className={`px-4 py-2 rounded-lg transition-colors ${filter === 'all'
+              ? 'bg-blue-600 text-white'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
           >
             {t('alerts.all')}
           </button>
@@ -146,22 +150,21 @@ export function AlertsList({ businessId, language }: AlertsListProps) {
                         {t(`alerts.${alert.alert_type}`)}
                       </span>
                       <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          alert.severity === 'critical'
-                            ? 'bg-red-100 text-red-700'
-                            : alert.severity === 'warning'
+                        className={`text-xs px-2 py-1 rounded-full ${alert.severity === 'critical'
+                          ? 'bg-red-100 text-red-700'
+                          : alert.severity === 'warning'
                             ? 'bg-amber-100 text-amber-700'
                             : 'bg-blue-100 text-blue-700'
-                        }`}
+                          }`}
                       >
                         {t(`alerts.${alert.severity}`)}
                       </span>
                     </div>
                     <p className="text-slate-700 mb-2">{alert.message}</p>
                     <div className="text-xs text-slate-500">
-                      {new Date(alert.created_at).toLocaleString(
+                      {alert.created_at ? new Date(alert.created_at).toLocaleString(
                         language === 'it' ? 'it-IT' : language === 'en' ? 'en-US' : 'es-ES'
-                      )}
+                      ) : ''}
                     </div>
                   </div>
                 </div>

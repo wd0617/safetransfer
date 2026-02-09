@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeTransfer - Importar Clientes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f1c2e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: #22c55e;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        textarea {
+            min-height: 200px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: #fff;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        #log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .log-success {
+            color: #22c55e;
+        }
+
+        .log-error {
+            color: #ef4444;
+        }
+
+        .log-skip {
+            color: #f59e0b;
+        }
+
+        .log-info {
+            color: #3b82f6;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+
+        .preview-table th,
+        .preview-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .preview-table th {
+            background: rgba(34, 197, 94, 0.2);
+            position: sticky;
+            top: 0;
+        }
+
+        .preview-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔄 SafeTransfer - Importar Clientes</h1>
+
+        <!-- Step 1: Configuration -->
+        <div class="card" id="step1">
+            <h2>📋 Paso 1: Configuración</h2>
+
+            <label for="supabaseUrl">URL de Supabase:</label>
+            <input type="text" id="supabaseUrl" value="https://gvgzxfqpduqwvjuoylxf.supabase.co"
+                placeholder="https://xxxxx.supabase.co">
+
+            <label for="supabaseKey">Supabase Anon Key:</label>
+            <input type="password" id="supabaseKey" placeholder="Tu anon key de Supabase">
+            <small style="opacity: 0.7; display: block; margin-top: -12px; margin-bottom: 16px;">
+                Encuentra esto en: Supabase Dashboard → Settings → API → anon public
+            </small>
+
+            <label for="businessId">Business ID (donde importar):</label>
+            <input type="text" id="businessId" placeholder="UUID de tu negocio en SafeTransfer">
+            <small style="opacity: 0.7; display: block; margin-top: -12px; margin-bottom: 16px;">
+                Lo encuentras en la URL cuando estás en SafeTransfer: /dashboard/BUSINESS_ID/...
+            </small>
+        </div>
+
+        <!-- Step 2: Upload Data -->
+        <div class="card" id="step2">
+            <h2>📤 Paso 2: Cargar Datos del Backup</h2>
+
+            <label for="sqlData">Pega aquí el contenido de la sección INSERT INTO `clientes` del backup SQL:</label>
+            <textarea id="sqlData" placeholder="INSERT INTO `clientes` (`id`, `nombre`, `apellido`, ...) VALUES
+(1, 'Wander', 'Perez', '1994-09-06', 'ax12345', ...),
+(2, 'ORNELA', 'GJYLA', ...);"></textarea>
+
+            <button onclick="parseData()">🔍 Analizar Datos</button>
+        </div>
+
+        <!-- Step 3: Preview -->
+        <div class="card hidden" id="step3">
+            <h2>👀 Paso 3: Vista Previa</h2>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="totalClients">0</div>
+                    <div class="stat-label">Clientes encontrados</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="withPhone">0</div>
+                    <div class="stat-label">Con teléfono</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="withDOB">0</div>
+                    <div class="stat-label">Con fecha de nac.</div>
+                </div>
+            </div>
+
+            <label>Vista previa (primeros 20):</label>
+            <div class="preview-container">
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre Completo</th>
+                            <th>Documento</th>
+                            <th>Teléfono</th>
+                            <th>Fecha Nac.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="startImport()">🚀 Iniciar Importación</button>
+                <button class="secondary" onclick="document.getElementById('step3').classList.add('hidden')">←
+                    Volver</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Import Progress -->
+        <div class="card hidden" id="step4">
+            <h2>⏳ Paso 4: Importando...</h2>
+
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value log-success" id="importedCount">0</div>
+                    <div class="stat-label">Importados</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value log-skip" id="skippedCount">0</div>
+                    <div class="stat-label">Ya existían</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value log-error" id="errorCount">0</div>
+                    <div class="stat-label">Errores</div>
+                </div>
+            </div>
+
+            <label>Log de importación:</label>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        let parsedClients = [];
+        let supabase = null;
+
+        // Parse SQL INSERT statement
+        window.parseData = function () {
+            const sqlData = document.getElementById('sqlData').value;
+
+            // Regex to extract values from INSERT statement
+            const regex = /\((\d+),\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'?([^',]*)'?,\s*([^,]*),\s*'([^']*)',\s*'([^']*)'\)/g;
+
+            parsedClients = [];
+            let match;
+
+            while ((match = regex.exec(sqlData)) !== null) {
+                const [_, id, nombre, apellido, fechaNac, documento, telefono, foto, fechaReg, ultimaVisita] = match;
+
+                parsedClients.push({
+                    id: parseInt(id),
+                    full_name: `${nombre.trim()} ${apellido.trim()}`.toUpperCase(),
+                    document_type: 'id_card',
+                    document_number: documento.toUpperCase().trim(),
+                    document_country: 'IT',
+                    date_of_birth: fechaNac !== '0000-00-00' && fechaNac.startsWith('19') || fechaNac.startsWith('20') ? fechaNac : null,
+                    phone: telefono !== 'NULL' && telefono ? telefono.replace(/'/g, '').trim() : null,
+                    transfer_systems: ['western_union'],
+                    nationality: 'Italia'
+                });
+            }
+
+            if (parsedClients.length === 0) {
+                alert('No se encontraron clientes. Verifica el formato del SQL.');
+                return;
+            }
+
+            // Update stats
+            document.getElementById('totalClients').textContent = parsedClients.length;
+            document.getElementById('withPhone').textContent = parsedClients.filter(c => c.phone).length;
+            document.getElementById('withDOB').textContent = parsedClients.filter(c => c.date_of_birth).length;
+
+            // Show preview
+            const previewBody = document.getElementById('previewBody');
+            previewBody.innerHTML = '';
+
+            parsedClients.slice(0, 20).forEach(client => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+          <td>${client.full_name}</td>
+          <td>${client.document_number}</td>
+          <td>${client.phone || '-'}</td>
+          <td>${client.date_of_birth || '-'}</td>
+        `;
+                previewBody.appendChild(row);
+            });
+
+            document.getElementById('step3').classList.remove('hidden');
+        };
+
+        // Start importing
+        window.startImport = async function () {
+            const supabaseUrl = document.getElementById('supabaseUrl').value.trim();
+            const supabaseKey = document.getElementById('supabaseKey').value.trim();
+            const businessId = document.getElementById('businessId').value.trim();
+
+            if (!supabaseUrl || !supabaseKey || !businessId) {
+                alert('Completa todos los campos de configuración');
+                return;
+            }
+
+            supabase = createClient(supabaseUrl, supabaseKey);
+
+            document.getElementById('step4').classList.remove('hidden');
+
+            const log = document.getElementById('log');
+            let imported = 0, skipped = 0, errors = 0;
+
+            for (let i = 0; i < parsedClients.length; i++) {
+                const client = { ...parsedClients[i], business_id: businessId };
+                delete client.id;
+
+                try {
+                    // Check if exists
+                    const { data: existing } = await supabase
+                        .from('clients')
+                        .select('id')
+                        .eq('business_id', businessId)
+                        .eq('document_number', client.document_number)
+                        .single();
+
+                    if (existing) {
+                        skipped++;
+                        log.innerHTML += `<div class="log-skip">⏭️ ${client.full_name} - Ya existe</div>`;
+                    } else {
+                        const { error } = await supabase.from('clients').insert(client);
+
+                        if (error) throw error;
+
+                        imported++;
+                        log.innerHTML += `<div class="log-success">✅ ${client.full_name}</div>`;
+                    }
+                } catch (err) {
+                    errors++;
+                    log.innerHTML += `<div class="log-error">❌ ${client.full_name} - ${err.message}</div>`;
+                }
+
+                // Update progress
+                const progress = ((i + 1) / parsedClients.length * 100).toFixed(1);
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('importedCount').textContent = imported;
+                document.getElementById('skippedCount').textContent = skipped;
+                document.getElementById('errorCount').textContent = errors;
+
+                log.scrollTop = log.scrollHeight;
+
+                // Small delay to not overload
+                await new Promise(r => setTimeout(r, 50));
+            }
+
+            log.innerHTML += `<div class="log-info"><br>🎉 Importación completada!</div>`;
+        };
+    </script>
+</body>
+
+</html>

@@ -1,18 +1,47 @@
 import { useState, useEffect } from 'react';
 import { X, Save, Search, AlertCircle, CheckCircle } from 'lucide-react';
 import { useTranslation, Language } from '../../lib/i18n';
-import { Database } from '../../lib/database.types';
 import { CountrySelect } from '../Shared/CountrySelect';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { clientService } from '../../lib/clientService';
 
-type Client = Database['public']['Tables']['clients']['Row'];
-type ClientInsert = Database['public']['Tables']['clients']['Insert'];
+type DocumentType = 'passport' | 'id_card' | 'residence_permit' | 'drivers_license';
+
+type Client = {
+  id: string;
+  business_id: string;
+  full_name: string;
+  document_type: DocumentType;
+  document_number: string;
+  document_country: string;
+  document_expiry?: string | null;
+  date_of_birth: string;
+  nationality: string;
+  fiscal_code?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  country: string;
+  notes?: string | null;
+  transfer_systems?: string[] | null;
+};
+type ClientInsert = Partial<Client> & {
+  business_id: string;
+  full_name: string;
+  document_type: DocumentType;
+  document_number: string;
+  document_country: string;
+  date_of_birth: string;
+  nationality: string;
+  country: string;
+};
 
 interface ClientFormProps {
   businessId: string;
   language: Language;
-  client?: Client | null;
+  client?: Partial<Client> | null;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -31,13 +60,13 @@ export function ClientForm({ businessId, language, client, onClose, onSaved }: C
   const [formData, setFormData] = useState<Partial<ClientInsert>>({
     business_id: businessId,
     full_name: client?.full_name || '',
-    document_type: client?.document_type || 'id_card',
+    document_type: (client?.document_type as DocumentType) || 'id_card',
     document_number: client?.document_number || '',
     document_country: client?.document_country || 'IT',
     document_expiry: client?.document_expiry || '',
     date_of_birth: client?.date_of_birth || '',
     nationality: client?.nationality || 'Italia',
-    fiscal_code: (client as any)?.fiscal_code || '',
+    fiscal_code: client?.fiscal_code || '',
     phone: client?.phone || '',
     email: client?.email || '',
     address: client?.address || '',
@@ -45,7 +74,7 @@ export function ClientForm({ businessId, language, client, onClose, onSaved }: C
     postal_code: client?.postal_code || '',
     country: client?.country || 'IT',
     notes: client?.notes || '',
-    transfer_systems: (client as any)?.transfer_systems || [],
+    transfer_systems: client?.transfer_systems || [],
   });
 
   const transferSystems = [
@@ -132,7 +161,7 @@ export function ClientForm({ businessId, language, client, onClose, onSaved }: C
 
     // Usar el servicio para crear o actualizar (sanitización automática)
     const result = client
-      ? await clientService.update(client.id, formData)
+      ? await clientService.update((client as Client).id, formData)
       : await clientService.create(formData as ClientInsert);
 
     if (result.error) {
@@ -228,7 +257,7 @@ export function ClientForm({ businessId, language, client, onClose, onSaved }: C
               </label>
               <select
                 value={formData.document_type}
-                onChange={(e) => setFormData({ ...formData, document_type: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, document_type: e.target.value as DocumentType })}
                 required
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
@@ -315,8 +344,8 @@ export function ClientForm({ businessId, language, client, onClose, onSaved }: C
               </label>
               <input
                 type="text"
-                value={(formData as any).fiscal_code || ''}
-                onChange={(e) => setFormData({ ...formData, fiscal_code: e.target.value.toUpperCase() } as any)}
+                value={formData.fiscal_code || ''}
+                onChange={(e) => setFormData({ ...formData, fiscal_code: e.target.value.toUpperCase() })}
                 maxLength={16}
                 placeholder="RSSMRA85M01H501Z"
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"

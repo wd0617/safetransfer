@@ -2,10 +2,20 @@ import { useState } from 'react';
 import { Save, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTranslation, Language } from '../../lib/i18n';
-import { Database } from '../../lib/database.types';
-
-type Business = Database['public']['Tables']['businesses']['Row'];
-type BusinessUser = Database['public']['Tables']['business_users']['Row'];
+type Business = {
+  id: string;
+  name: string;
+  email?: string;
+  registration_number?: string | null;
+  primary_color?: string;
+  secondary_color?: string;
+};
+type BusinessUser = {
+  id: string;
+  full_name: string;
+  language?: Language;
+  role: 'admin' | 'operator';
+};
 
 interface SettingsProps {
   business: Business;

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeTransfer</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="M9 12l2 2 4-4" />
+                </svg>
+                <h1>SafeTransfer</h1>
+            </div>
+            <span class="version">v1.0</span>
+        </header>
+
+        <div id="status-bar" class="status-bar hidden">
+            <span id="status-icon">✓</span>
+            <span id="status-text"></span>
+        </div>
+
+        <div id="detected-system" class="detected-system hidden">
+            <span class="label">Sistema detectado:</span>
+            <span id="system-name" class="system-name"></span>
+        </div>
+
+        <div class="actions">
+            <button id="btn-capture-client" class="btn btn-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Capturar Cliente</span>
+            </button>
+
+            <button id="btn-capture-transfer" class="btn btn-success">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                <span>Capturar Transferencia</span>
+            </button>
+
+            <button id="btn-capture-both" class="btn btn-accent">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                </svg>
+                <span>Capturar Todo</span>
+            </button>
+        </div>
+
+        <div id="preview-section" class="preview-section hidden">
+            <h3>Datos Capturados</h3>
+            <div id="preview-data" class="preview-data"></div>
+            <div class="preview-actions">
+                <button id="btn-send" class="btn btn-primary btn-small">
+                    Enviar a SafeTransfer
+                </button>
+                <button id="btn-cancel" class="btn btn-secondary btn-small">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+
+        <div class="manual-section">
+            <button id="btn-manual" class="btn btn-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Entrada Manual
+            </button>
+        </div>
+
+        <footer>
+            <a href="https://safetransfer-pi.vercel.app" target="_blank" id="open-app">
+                Abrir SafeTransfer
+            </a>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

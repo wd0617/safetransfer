@@ -7,34 +7,41 @@ interface SecurityAlert {
   alert_type: string;
   severity: string;
   description: string;
-  created_at: string;
-  resolved: boolean;
-  business_id?: string;
-  user_id?: string;
-  metadata: any;
+  created_at: string | null;
+  resolved: boolean | null;
+  business_id?: string | null;
+  user_id?: string | null;
+  ip_address?: string | null;
+  metadata: unknown;
 }
 
 interface FailedLogin {
   email: string;
   attempt_time: string;
-  ip_address: string;
-  failure_reason: string;
+  ip_address: string | null;
+  failure_reason: string | null;
+  user_agent?: string | null;
+  created_at?: string | null;
 }
 
 interface AccountLockout {
+  id: string;
   email: string;
   locked_at: string;
   locked_until: string;
-  reason: string;
+  reason: string | null;
   is_active: boolean;
+  created_at?: string | null;
 }
+
+type SecurityTab = 'alerts' | 'logins' | 'lockouts';
 
 export function SecurityMonitoring() {
   const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
   const [failedLogins, setFailedLogins] = useState<FailedLogin[]>([]);
   const [lockouts, setLockouts] = useState<AccountLockout[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'alerts' | 'logins' | 'lockouts'>('alerts');
+  const [activeTab, setActiveTab] = useState<SecurityTab>('alerts');
 
   useEffect(() => {
     loadSecurityData();
@@ -185,26 +192,24 @@ export function SecurityMonitoring() {
       <div className="bg-white rounded-xl shadow-sm border border-slate-200">
         <div className="border-b border-slate-200">
           <div className="flex gap-1 p-1">
-            {[
-              { key: 'alerts', label: 'Alertas de Seguridad', count: unresolvedAlerts.length },
-              { key: 'logins', label: 'Intentos Fallidos', count: failedLogins.length },
-              { key: 'lockouts', label: 'Bloqueos Activos', count: lockouts.length },
-            ].map((tab) => (
+            {([
+              { key: 'alerts' as SecurityTab, label: 'Alertas de Seguridad', count: unresolvedAlerts.length },
+              { key: 'logins' as SecurityTab, label: 'Intentos Fallidos', count: failedLogins.length },
+              { key: 'lockouts' as SecurityTab, label: 'Bloqueos Activos', count: lockouts.length },
+            ]).map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
-                  activeTab === tab.key
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${activeTab === tab.key
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+                  }`}
               >
                 {tab.label}
                 {tab.count > 0 && (
                   <span
-                    className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                      activeTab === tab.key ? 'bg-white text-blue-600' : 'bg-slate-200'
-                    }`}
+                    className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === tab.key ? 'bg-white text-blue-600' : 'bg-slate-200'
+                      }`}
                   >
                     {tab.count}
                   </span>
@@ -242,7 +247,7 @@ export function SecurityMonitoring() {
                           </div>
                           <p className="text-sm mb-2">{alert.description}</p>
                           <p className="text-xs opacity-75">
-                            {new Date(alert.created_at).toLocaleString('es-ES')}
+                            {alert.created_at ? new Date(alert.created_at).toLocaleString('es-ES') : ''}
                           </p>
                         </div>
                       </div>
@@ -294,7 +299,7 @@ export function SecurityMonitoring() {
                   <p>No hay cuentas bloqueadas</p>
                 </div>
               ) : (
-                lockouts.map((lockout: any) => (
+                lockouts.map((lockout) => (
                   <div key={lockout.id} className="border-2 border-red-300 bg-red-50 rounded-lg p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">

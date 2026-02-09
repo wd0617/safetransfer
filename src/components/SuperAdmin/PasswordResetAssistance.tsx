@@ -3,6 +3,7 @@ import { Key, AlertCircle, CheckCircle, Shield } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { createSecurityAlert } from '../../lib/security';
+import { getSecurityContext } from '../../lib/security';
 
 export function PasswordResetAssistance() {
   const { user } = useAuth();
@@ -34,19 +35,10 @@ export function PasswordResetAssistance() {
     setLoading(true);
 
     try {
-      const { data: targetUserData } = await supabase.auth.admin.listUsers();
-      const targetUser = targetUserData.users.find((u) => u.email === email);
-
-      if (!targetUser) {
-        setMessage({ type: 'error', text: 'Usuario no encontrado' });
-        setLoading(false);
-        return;
-      }
-
       const { data: businessUserData } = await supabase
         .from('business_users')
-        .select('business_id')
-        .eq('user_id', targetUser.id)
+        .select('user_id, business_id, full_name')
+        .eq('email', email)
         .eq('is_active', true)
         .maybeSingle();
 
@@ -56,13 +48,12 @@ export function PasswordResetAssistance() {
         return;
       }
 
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        targetUser.id,
-        { password: newPassword }
-      );
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
 
-      if (updateError) {
-        setMessage({ type: 'error', text: `Error al actualizar contraseña: ${updateError.message}` });
+      if (resetError) {
+        setMessage({ type: 'error', text: `Error al solicitar recuperación: ${resetError.message}` });
         setLoading(false);
         return;
       }
@@ -71,40 +62,38 @@ export function PasswordResetAssistance() {
         .from('business_users')
         .update({
           must_change_password: true,
-          password_set_by_admin: true,
-          password_changed_at: new Date().toISOString(),
         })
-        .eq('user_id', targetUser.id);
+        .eq('user_id', businessUserData.user_id);
 
-      await supabase.from('password_reset_requests').insert({
-        user_id: targetUser.id,
-        business_id: businessUserData.business_id,
-        email: email,
-        reset_token: crypto.randomUUID(),
-        requested_at: new Date().toISOString(),
-        expires_at: new Date().toISOString(),
-        is_used: true,
-        used_at: new Date().toISOString(),
-        assisted_by_superadmin: true,
-        superadmin_id: user?.id,
-      });
+      const context = getSecurityContext();
+      await supabase
+        .from('password_change_requests')
+        .insert({
+          user_id: businessUserData.user_id,
+          business_id: businessUserData.business_id,
+          email: email,
+          status: 'approved',
+          request_token: crypto.randomUUID(),
+          ip_address: context.ipAddress,
+          user_agent: context.userAgent,
+        });
 
       await createSecurityAlert({
         alert_type: 'privilege_escalation',
         severity: 'high',
         user_id: user?.id,
         business_id: businessUserData.business_id,
-        description: `SuperAdmin reset password for user ${email}`,
+        description: `SuperAdmin solicitó restablecimiento de contraseña para ${email}`,
         metadata: {
           target_user_email: email,
-          target_user_id: targetUser.id,
+          target_user_id: businessUserData.user_id,
           superadmin_id: user?.id,
         },
       });
 
       setMessage({
         type: 'success',
-        text: `Contraseña actualizada exitosamente para ${email}. El usuario puede iniciar sesión con la nueva contraseña.`,
+        text: `Solicitud de recuperación enviada para ${email}. El usuario recibirá un enlace de restablecimiento.`,
       });
 
       setEmail('');

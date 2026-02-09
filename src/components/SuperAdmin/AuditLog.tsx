@@ -1,9 +1,18 @@
 import { useState, useEffect } from 'react';
 import { History, Filter, Calendar } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { Database } from '../../lib/database.types';
-
-type AuditLog = Database['public']['Tables']['admin_audit_log']['Row'];
+type AuditLog = {
+  id: string;
+  admin_user_id?: string | null;
+  business_id?: string | null;
+  action_type: string;
+  action_description: string;
+  entity_type?: string | null;
+  entity_id?: string | null;
+  new_values?: unknown;
+  ip_address?: string | null;
+  created_at: string | null;
+};
 
 interface AuditLogWithBusiness extends AuditLog {
   business_name?: string;
@@ -159,7 +168,7 @@ export function AuditLog() {
                       <p className="text-sm text-slate-900 mt-2 font-medium">{log.action_description}</p>
                     </div>
                     <span className="text-xs text-slate-500 whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString()}
+                      {log.created_at ? new Date(log.created_at).toLocaleString() : ''}
                     </span>
                   </div>
                   {log.entity_type && (
@@ -167,13 +176,13 @@ export function AuditLog() {
                       Entity: <span className="font-medium">{log.entity_type}</span>
                     </p>
                   )}
-                  {log.new_values && (
+                  {log.new_values != null && (
                     <details className="mt-2">
                       <summary className="text-xs text-slate-600 cursor-pointer hover:text-slate-900">
                         View details
                       </summary>
                       <pre className="mt-2 text-xs bg-slate-100 p-2 rounded overflow-x-auto">
-                        {JSON.stringify(log.new_values, null, 2)}
+                        {JSON.stringify(log.new_values as object, null, 2)}
                       </pre>
                     </details>
                   )}

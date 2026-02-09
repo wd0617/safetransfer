@@ -5,7 +5,6 @@ import {
   trackSession,
   logSensitiveDataAccess,
   createSecurityAlert,
-  SecurityContext,
 } from '../lib/security';
 
 export function useSecurity() {

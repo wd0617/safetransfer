@@ -8,7 +8,7 @@ export interface PasswordChangeResult {
 }
 
 export async function changePassword(
-  currentPassword: string,
+  _currentPassword: string,
   newPassword: string
 ): Promise<PasswordChangeResult> {
   try {
@@ -76,12 +76,12 @@ export async function changePassword(
       success: true,
       message: 'Contraseña actualizada exitosamente',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error changing password:', error);
     return {
       success: false,
       message: 'Error al procesar solicitud',
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -102,20 +102,10 @@ export async function requestPasswordRecovery(email: string): Promise<{
   requestId?: string;
 }> {
   try {
-    const { data: { users } } = await supabase.auth.admin.listUsers();
-    const user = users.find((u) => u.email === email);
-
-    if (!user) {
-      return {
-        success: false,
-        message: 'Email no encontrado en el sistema',
-      };
-    }
-
     const { data: businessUserData } = await supabase
       .from('business_users')
-      .select('business_id, full_name')
-      .eq('user_id', user.id)
+      .select('user_id, business_id, full_name')
+      .eq('email', email)
       .eq('is_active', true)
       .maybeSingle();
 
@@ -132,7 +122,7 @@ export async function requestPasswordRecovery(email: string): Promise<{
     const { data: requestData, error: requestError } = await supabase
       .from('password_change_requests')
       .insert({
-        user_id: user.id,
+        user_id: businessUserData.user_id,
         business_id: businessUserData.business_id,
         email: email,
         status: 'pending',
@@ -153,16 +143,16 @@ export async function requestPasswordRecovery(email: string): Promise<{
 
     await supabase.from('superadmin_requests').insert({
       request_type: 'password_recovery',
-      status: 'pending',
-      priority: 'high',
+      status: 'pending' as const,
+      priority: 'high' as const,
       business_id: businessUserData.business_id,
-      user_id: user.id,
+      user_id: businessUserData.user_id,
       title: `Solicitud de recuperación de contraseña - ${businessUserData.full_name}`,
       description: `El usuario ${email} ha solicitado recuperación de contraseña desde IP ${context.ipAddress}`,
       metadata: {
         email: email,
         request_token: requestToken,
-        ip_address: context.ipAddress,
+        ip_address: context.ipAddress ?? null,
       },
     });
 
@@ -171,7 +161,7 @@ export async function requestPasswordRecovery(email: string): Promise<{
       p_priority: 'high',
       p_recipient_type: 'both',
       p_business_id: businessUserData.business_id,
-      p_user_id: user.id,
+      p_user_id: businessUserData.user_id,
       p_title: 'Solicitud de Recuperación de Contraseña',
       p_message: `Tu solicitud de recuperación de contraseña ha sido enviada. El SuperAdmin la revisará pronto y recibirás un correo de confirmación.`,
       p_metadata: { request_id: requestData.id },
@@ -182,7 +172,7 @@ export async function requestPasswordRecovery(email: string): Promise<{
       p_priority: 'high',
       p_recipient_type: 'superadmin',
       p_business_id: businessUserData.business_id,
-      p_user_id: user.id,
+      p_user_id: businessUserData.user_id,
       p_title: 'Nueva Solicitud de Recuperación de Contraseña',
       p_message: `${businessUserData.full_name} (${email}) ha solicitado recuperación de contraseña.`,
       p_metadata: { request_id: requestData.id },
@@ -193,7 +183,7 @@ export async function requestPasswordRecovery(email: string): Promise<{
       message: 'Solicitud enviada. Recibirás un correo cuando sea procesada.',
       requestId: requestData.id,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error requesting password recovery:', error);
     return {
       success: false,
@@ -229,7 +219,7 @@ async function createPasswordChangeNotification(
   });
 }
 
-export async function checkPasswordStrength(password: string): {
+export function checkPasswordStrength(password: string): {
   isStrong: boolean;
   score: number;
   feedback: string[];

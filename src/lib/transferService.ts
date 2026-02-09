@@ -5,12 +5,32 @@
  */
 
 import { supabase } from './supabase';
-import { Database } from './database.types';
 import { sanitizeObject } from './sanitize';
 import { appCache, CACHE_KEYS, CACHE_TTL, cacheInvalidation } from './cache';
 
-type Transfer = Database['public']['Tables']['transfers']['Row'];
-type TransferInsert = Database['public']['Tables']['transfers']['Insert'];
+type Transfer = {
+  id: string;
+  business_id: string;
+  client_id: string;
+  amount: number;
+  currency?: string;
+  transfer_date?: string;
+  next_allowed_date?: string;
+  destination_country: string;
+  recipient_name: string;
+  recipient_relationship?: string | null;
+  purpose?: string | null;
+  status: 'completed' | 'pending' | 'cancelled';
+  notes?: string | null;
+  created_by?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  document_number?: string | null;
+  transfer_system?: string | null;
+  commission_amount?: number | null;
+  commission_included?: boolean | null;
+};
+type TransferInsert = Omit<Transfer, 'id'>;
 
 export interface EligibilityResult {
     can_transfer: boolean;
@@ -145,9 +165,9 @@ export async function createTransfer(
 
         // Invalidar cachés relacionados
         if (data) {
-            const businessId = (transferData as any).business_id;
-            const clientId = (transferData as any).client_id;
-            const docNumber = (transferData as any).document_number;
+            const businessId = transferData.business_id;
+            const clientId = transferData.client_id;
+            const docNumber = transferData.document_number as string | undefined;
 
             if (businessId && docNumber && clientId) {
                 cacheInvalidation.afterTransferCreated(businessId, docNumber, clientId);
@@ -288,7 +308,10 @@ export async function getWeeklySummary(
         if (error) throw error;
 
         const summary = {
-            total_amount: data?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0,
+            total_amount: (data || []).reduce(
+              (sum: number, t: { amount: number | string }) => sum + Number(t.amount || 0),
+              0
+            ),
             transfer_count: data?.length || 0,
         };
 

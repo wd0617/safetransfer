@@ -1,14 +1,33 @@
 import { useState, useEffect } from 'react';
 import { X, Save, CheckCircle, AlertTriangle, Search, Info, TrendingUp, Clock } from 'lucide-react';
 import { useTranslation, Language } from '../../lib/i18n';
-import { Database } from '../../lib/database.types';
 import { CountrySelect } from '../Shared/CountrySelect';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { clientService } from '../../lib/clientService';
 import { transferService, type EligibilityResult } from '../../lib/transferService';
 
-type Client = Database['public']['Tables']['clients']['Row'];
-type TransferInsert = Database['public']['Tables']['transfers']['Insert'];
+type Client = {
+  id: string;
+  full_name: string;
+  document_type: string;
+  document_number: string;
+};
+type TransferInsert = {
+  business_id: string;
+  client_id: string;
+  amount: number;
+  currency?: string;
+  destination_country: string;
+  recipient_name: string;
+  recipient_relationship?: string;
+  purpose?: string;
+  notes?: string;
+  status: 'completed' | 'pending' | 'cancelled';
+  created_by?: string;
+  transfer_system?: string;
+  commission_amount?: number;
+  commission_included?: boolean;
+};
 
 
 
@@ -33,9 +52,9 @@ export function TransferForm({ businessId, userId, language, onClose, onSaved }:
   // Inicializar validación de formularios
   const { validateTransfer } = useFormValidation({ language });
 
-  const [formData, setFormData] = useState<Partial<TransferInsert>>({
+  const [formData, setFormData] = useState<Partial<Omit<TransferInsert, 'next_allowed_date'>>>({
     business_id: businessId,
-    amount: undefined,
+    amount: 0,
     currency: 'EUR',
     destination_country: '',
     recipient_name: '',
@@ -141,7 +160,23 @@ export function TransferForm({ businessId, userId, language, onClose, onSaved }:
     setLoading(true);
 
     // Usar el servicio para crear la transferencia (sanitización automática)
-    const result = await transferService.create(formData);
+    const payload: Omit<TransferInsert, 'next_allowed_date'> = {
+      business_id: formData.business_id || businessId,
+      client_id: selectedClient.id,
+      amount: Number(formData.amount) || 0,
+      currency: formData.currency || 'EUR',
+      destination_country: formData.destination_country || '',
+      recipient_name: formData.recipient_name || '',
+      recipient_relationship: formData.recipient_relationship,
+      purpose: formData.purpose,
+      notes: formData.notes,
+      status: formData.status ?? 'completed',
+      created_by: formData.created_by || userId,
+      transfer_system: formData.transfer_system,
+      commission_amount: formData.commission_amount,
+      commission_included: formData.commission_included,
+    };
+    const result = await transferService.create(payload);
 
     if (result.error) {
       setError(result.error);
@@ -233,7 +268,8 @@ export function TransferForm({ businessId, userId, language, onClose, onSaved }:
                     onClick={() => {
                       setSelectedClient(null);
                       setEligibility(null);
-                      setFormData({ ...formData, client_id: undefined });
+                      const { client_id: _old, ...rest } = formData;
+                      setFormData({ ...rest });
                     }}
                     className="text-sm text-blue-600 hover:text-blue-700"
                   >
@@ -376,7 +412,7 @@ export function TransferForm({ businessId, userId, language, onClose, onSaved }:
                           }
                         }}
                         required
-                        disabled={eligibility && !eligibility.can_transfer && eligibility.amount_available <= 0}
+                        disabled={Boolean(eligibility && !eligibility.can_transfer && eligibility.amount_available <= 0)}
                         placeholder="0.00"
                         className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
                       />

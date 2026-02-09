@@ -2,7 +2,7 @@
  * Tests para el Sistema de Caché
  * Verifica el funcionamiento correcto del caché en memoria
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { appCache, CACHE_KEYS, CACHE_TTL, cacheInvalidation } from './cache';
 
 describe('Cache System', () => {

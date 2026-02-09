@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Bell, CheckCircle, AlertTriangle, Clock, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { Database } from '../../lib/database.types';
 
-type AdminNotification = Database['public']['Tables']['admin_notifications']['Row'];
+
+type AdminNotification = {
+  id: string;
+  business_id: string;
+  notification_type: string;
+  title: string;
+  message: string;
+  priority: 'normal' | 'high' | 'urgent';
+  is_read: boolean | null;
+  created_at: string | null;
+};
+
 
 interface PaymentNotificationsProps {
   onNotificationClick?: (businessId: string) => void;
@@ -68,7 +78,7 @@ export function PaymentNotifications({ onNotificationClick }: PaymentNotificatio
               business_id: sub.business_id,
               notification_type: 'payment_due',
               title: 'Payment Due Soon',
-              message: `Payment for ${(sub as any).businesses?.name} is due in ${daysUntil} days`,
+              message: `Payment for ${sub.businesses?.name || 'Unknown Business'} is due in ${daysUntil} days`,
               priority: daysUntil <= 7 ? 'high' : 'normal',
             });
           }
@@ -111,7 +121,7 @@ export function PaymentNotifications({ onNotificationClick }: PaymentNotificatio
               business_id: sub.business_id,
               notification_type: 'trial_expiring',
               title: 'Trial Expiring Soon',
-              message: `Trial for ${(sub as any).businesses?.name} expires in ${daysUntil} days`,
+              message: `Trial for ${sub.businesses?.name || 'Unknown Business'} expires in ${daysUntil} days`,
               priority: daysUntil <= 3 ? 'urgent' : 'high',
             });
           }
@@ -151,7 +161,7 @@ export function PaymentNotifications({ onNotificationClick }: PaymentNotificatio
   };
 
   const getNotificationIcon = (type: string) => {
-    const icons: Record<string, any> = {
+    const icons: Record<string, React.ElementType> = {
       payment_due: Clock,
       payment_overdue: AlertTriangle,
       trial_expiring: Clock,
@@ -200,9 +210,8 @@ export function PaymentNotifications({ onNotificationClick }: PaymentNotificatio
           return (
             <div
               key={notification.id}
-              className={`bg-white rounded-lg border p-4 ${
-                notification.is_read ? 'border-slate-200' : 'border-blue-300 bg-blue-50'
-              }`}
+              className={`bg-white rounded-lg border p-4 ${notification.is_read ? 'border-slate-200' : 'border-blue-300 bg-blue-50'
+                }`}
             >
               <div className="flex items-start gap-4">
                 <div className={`p-2 rounded-lg ${getPriorityColor(notification.priority)}`}>
@@ -221,7 +230,7 @@ export function PaymentNotifications({ onNotificationClick }: PaymentNotificatio
                       <h3 className="font-semibold text-slate-900">{notification.title}</h3>
                       <p className="text-sm text-slate-600 mt-1">{notification.message}</p>
                       <p className="text-xs text-slate-500 mt-2">
-                        {new Date(notification.created_at).toLocaleString()}
+                        {notification.created_at ? new Date(notification.created_at).toLocaleString() : '-'}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

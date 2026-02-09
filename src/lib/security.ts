@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import type { Json } from './database.types';
 
 export interface SecurityContext {
   ipAddress?: string;
@@ -25,75 +26,26 @@ export async function logFailedLoginAttempt(
   reason: string
 ): Promise<void> {
   try {
-    await supabase.from('failed_login_attempts').insert({
-      email,
-      ip_address: context.ipAddress,
-      user_agent: context.userAgent,
-      failure_reason: reason,
+    await supabase.rpc('log_failed_login_attempt', {
+      p_email: email,
+      p_ip: context.ipAddress ?? null,
+      p_user_agent: context.userAgent ?? null,
+      p_reason: reason,
     });
-
-    await checkForSuspiciousLoginActivity(email, context.ipAddress);
   } catch (error) {
     console.error('Error logging failed login attempt:', error);
   }
 }
 
-async function checkForSuspiciousLoginActivity(
-  email: string,
-  ipAddress?: string
-): Promise<void> {
-  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-
-  const { data: recentAttempts, error } = await supabase
-    .from('failed_login_attempts')
-    .select('*')
-    .eq('email', email)
-    .gte('attempt_time', fifteenMinutesAgo);
-
-  if (error || !recentAttempts) return;
-
-  if (recentAttempts.length >= 5) {
-    await lockAccount(email, 'Multiple failed login attempts', 60);
-
-    await createSecurityAlert({
-      alert_type: 'multiple_failed_logins',
-      severity: 'high',
-      description: `Account ${email} locked after ${recentAttempts.length} failed login attempts`,
-      ip_address: ipAddress,
-      metadata: { email, attempt_count: recentAttempts.length },
-    });
-  }
-}
-
-async function lockAccount(
-  email: string,
-  reason: string,
-  durationMinutes: number
-): Promise<void> {
-  const lockedUntil = new Date(Date.now() + durationMinutes * 60 * 1000);
-
-  const { data: userData } = await supabase.auth.admin.listUsers();
-  const user = userData.users.find((u) => u.email === email);
-
-  await supabase.from('account_lockouts').insert({
-    user_id: user?.id || null,
-    email,
-    locked_until: lockedUntil.toISOString(),
-    reason,
-    is_active: true,
-  });
-}
-
 export async function isAccountLocked(email: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('account_lockouts')
-    .select('*')
-    .eq('email', email)
-    .eq('is_active', true)
-    .gte('locked_until', new Date().toISOString())
-    .maybeSingle();
-
-  return !error && data !== null;
+  const { data, error } = await supabase.rpc('is_account_locked', {
+    p_email: email,
+  });
+  if (error) {
+    console.error('Error checking account lock:', error);
+    return false;
+  }
+  return Boolean(data);
 }
 
 export async function checkRateLimit(
@@ -103,62 +55,33 @@ export async function checkRateLimit(
   const config = RATE_LIMITS[actionType];
   if (!config) return { allowed: true };
 
-  const windowStart = new Date(Date.now() - config.windowMinutes * 60 * 1000);
-
-  const { data, error } = await supabase
-    .from('rate_limit_tracking')
-    .select('*')
-    .eq('identifier', identifier)
-    .eq('action_type', actionType)
-    .gte('window_end', new Date().toISOString())
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('check_rate_limit_rpc', {
+    p_identifier: identifier,
+    p_action_type: actionType,
+    p_window_minutes: config.windowMinutes,
+    p_max_attempts: config.maxAttempts,
+  });
 
   if (error) {
     console.error('Error checking rate limit:', error);
     return { allowed: true };
   }
 
-  if (!data) {
-    const windowEnd = new Date(Date.now() + config.windowMinutes * 60 * 1000);
-    await supabase.from('rate_limit_tracking').insert({
-      identifier,
-      action_type: actionType,
-      count: 1,
-      window_start: windowStart.toISOString(),
-      window_end: windowEnd.toISOString(),
-      blocked: false,
-    });
-    return { allowed: true };
+  if (Array.isArray(data) && data.length > 0) {
+    const res = data[0] as { allowed: boolean; reset_at: string | null };
+    return { allowed: res.allowed, resetAt: res.reset_at ? new Date(res.reset_at) : undefined };
   }
-
-  if (data.count >= config.maxAttempts) {
-    await supabase
-      .from('rate_limit_tracking')
-      .update({ blocked: true })
-      .eq('id', data.id);
-
-    return {
-      allowed: false,
-      resetAt: new Date(data.window_end),
-    };
-  }
-
-  await supabase
-    .from('rate_limit_tracking')
-    .update({ count: data.count + 1 })
-    .eq('id', data.id);
-
   return { allowed: true };
 }
 
 interface SecurityAlertData {
   alert_type: string;
-  severity: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;
-  user_id?: string;
-  business_id?: string;
-  ip_address?: string;
-  metadata?: Record<string, any>;
+  user_id?: string | null;
+  business_id?: string | null;
+  ip_address?: string | null;
+  metadata?: Record<string, unknown>;
 }
 
 export async function createSecurityAlert(
@@ -166,8 +89,13 @@ export async function createSecurityAlert(
 ): Promise<void> {
   try {
     await supabase.from('security_alerts').insert({
-      ...alertData,
-      metadata: alertData.metadata || {},
+      alert_type: alertData.alert_type,
+      severity: alertData.severity,
+      description: alertData.description,
+      user_id: alertData.user_id ?? null,
+      business_id: alertData.business_id ?? null,
+      ip_address: alertData.ip_address ?? null,
+      metadata: (alertData.metadata || {}) as Json,
       resolved: false,
     });
 
@@ -244,17 +172,13 @@ export async function trackSession(
   context: SecurityContext
 ): Promise<void> {
   try {
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    await supabase.from('security_sessions').insert({
-      user_id: userId,
-      business_id: businessId,
-      session_token: sessionToken,
-      ip_address: context.ipAddress,
-      user_agent: context.userAgent,
-      device_fingerprint: context.deviceFingerprint,
-      expires_at: expiresAt.toISOString(),
-      is_active: true,
+    await supabase.rpc('track_session_rpc', {
+      p_user_id: userId,
+      p_business_id: businessId,
+      p_session_token: sessionToken,
+      p_ip: context.ipAddress ?? null,
+      p_user_agent: context.userAgent ?? null,
+      p_device_fingerprint: context.deviceFingerprint ?? null,
     });
   } catch (error) {
     console.error('Error tracking session:', error);
@@ -263,17 +187,13 @@ export async function trackSession(
 
 export async function invalidateUserSessions(userId: string): Promise<void> {
   try {
-    await supabase
-      .from('security_sessions')
-      .update({ is_active: false })
-      .eq('user_id', userId)
-      .eq('is_active', true);
+    await supabase.rpc('invalidate_user_sessions_rpc', { p_user_id: userId });
   } catch (error) {
     console.error('Error invalidating sessions:', error);
   }
 }
 
-export async function getActiveSessions(userId: string): Promise<any[]> {
+export async function getActiveSessions(userId: string): Promise<unknown[]> {
   const { data, error } = await supabase
     .from('security_sessions')
     .select('*')
@@ -330,8 +250,8 @@ export async function detectUnusualTransferPattern(
 
   if (!recentTransfers || recentTransfers.length < 3) return;
 
-  const amounts = recentTransfers.map((t) => parseFloat(t.amount));
-  const avgAmount = amounts.reduce((sum, amt) => sum + amt, 0) / amounts.length;
+  const amounts = recentTransfers.map((t: { amount: number | string }) => Number(t.amount));
+  const avgAmount = amounts.reduce((sum: number, amt: number) => sum + amt, 0) / amounts.length;
 
   if (amount > avgAmount * 3) {
     await createSecurityAlert({

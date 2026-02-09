@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Building2, Search, Filter, Eye, Ban, CheckCircle, XCircle, Clock, AlertTriangle, Power } from 'lucide-react';
+import { Building2, Search, Filter, Eye, Ban, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { Database } from '../../lib/database.types';
-
-type Business = Database['public']['Tables']['businesses']['Row'];
-type Subscription = Database['public']['Tables']['subscriptions']['Row'];
+type Business = {
+  id: string;
+  name: string;
+  email: string;
+  status?: string | null;
+};
+type Subscription = {
+  id: string;
+  business_id: string;
+  status?: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
+  next_payment_date?: string | null;
+  is_trial?: boolean | null;
+  trial_end_date?: string | null;
+  plan_type?: string | null;
+};
 
 interface BusinessWithSubscription extends Business {
   subscription?: Subscription;
@@ -12,6 +23,11 @@ interface BusinessWithSubscription extends Business {
   transfer_count: number;
   client_count: number;
   days_until_payment: number | null;
+  city?: string | null;
+  country?: string | null;
+  contact_name?: string | null;
+  phone?: string | null;
+  last_activity_at?: string | null;
 }
 
 interface BusinessManagementProps {
@@ -145,10 +161,10 @@ export function BusinessManagement({ onSelectBusiness }: BusinessManagementProps
 
   const updateBusinessStatus = async (businessId: string, status: string, reason?: string) => {
     try {
-      const updates: any = { status };
+      const updates: Record<string, string | null> = { status };
 
       if (status === 'blocked' || status === 'suspended') {
-        updates.blocked_reason = reason;
+        updates.blocked_reason = reason ?? null;
         updates.blocked_at = new Date().toISOString();
       } else {
         updates.blocked_reason = null;
@@ -169,7 +185,7 @@ export function BusinessManagement({ onSelectBusiness }: BusinessManagementProps
         action_description: `Changed business status to ${status}`,
         entity_type: 'business',
         entity_id: businessId,
-        new_values: { status, reason },
+        new_values: { status, reason: reason ?? null },
       });
 
       loadBusinesses();
@@ -189,24 +205,7 @@ export function BusinessManagement({ onSelectBusiness }: BusinessManagementProps
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusBadge = (status: string) => {
-    const badges: Record<string, { color: string; icon: any; label: string }> = {
-      active: { color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle, label: 'Active' },
-      inactive: { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: XCircle, label: 'Inactive' },
-      suspended: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock, label: 'Suspended' },
-      blocked: { color: 'bg-red-100 text-red-800 border-red-200', icon: Ban, label: 'Blocked' },
-    };
 
-    const badge = badges[status] || badges.active;
-    const Icon = badge.icon;
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border ${badge.color}`}>
-        <Icon className="w-3 h-3" />
-        {badge.label}
-      </span>
-    );
-  };
 
   const getTrialBadge = (subscription?: Subscription) => {
     if (!subscription?.is_trial) return null;
@@ -316,13 +315,12 @@ export function BusinessManagement({ onSelectBusiness }: BusinessManagementProps
                 </td>
                 <td className="px-6 py-4">
                   {business.days_until_payment !== null ? (
-                    <div className={`text-sm font-medium ${
-                      business.days_until_payment <= 0
-                        ? 'text-red-600'
-                        : business.days_until_payment <= 7
+                    <div className={`text-sm font-medium ${business.days_until_payment <= 0
+                      ? 'text-red-600'
+                      : business.days_until_payment <= 7
                         ? 'text-amber-600'
                         : 'text-slate-900'
-                    }`}>
+                      }`}>
                       {business.days_until_payment <= 0 ? (
                         <span className="flex items-center gap-1">
                           <AlertTriangle className="w-4 h-4" />
@@ -350,15 +348,13 @@ export function BusinessManagement({ onSelectBusiness }: BusinessManagementProps
                 <td className="px-6 py-4">
                   <button
                     onClick={() => toggleBusinessStatus(business.id, business.status || 'active')}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      (business.status === 'active' || business.status === 'trial') ? 'bg-green-600' : 'bg-slate-300'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${(business.status === 'active' || business.status === 'trial') ? 'bg-green-600' : 'bg-slate-300'
+                      }`}
                     title={(business.status === 'active' || business.status === 'trial') ? 'Servicio Activo' : 'Servicio Inactivo'}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        (business.status === 'active' || business.status === 'trial') ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(business.status === 'active' || business.status === 'trial') ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </td>

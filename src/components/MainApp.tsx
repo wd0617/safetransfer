@@ -14,10 +14,26 @@ import { BlockedBusinessMessage } from './Shared/BlockedBusinessMessage';
 import { SubscriptionNotification } from './Shared/SubscriptionNotification';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
-import { Database } from '../lib/database.types';
+ 
 import { calculateSubscriptionInfo } from '../lib/subscriptionUtils';
 
-type Client = Database['public']['Tables']['clients']['Row'];
+type DocumentType = 'passport' | 'id_card' | 'residence_permit' | 'drivers_license';
+type Client = {
+  id: string;
+  business_id: string;
+  full_name: string;
+  document_type: DocumentType;
+  document_number: string;
+  document_country?: string;
+  date_of_birth?: string;
+  nationality: string;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  country?: string;
+};
 
 export function MainApp() {
   const { signOut, businessUser, business, user, subscription, isSuperAdmin, isBusinessBlocked, refreshUser } = useAuth();
@@ -32,12 +48,12 @@ export function MainApp() {
   const subscriptionInfo = calculateSubscriptionInfo(subscription, language);
 
   useEffect(() => {
-    console.log('MainApp rendered', { businessUser: !!businessUser, business: !!business, user: !!user, subscription: !!subscription });
-    console.log('Subscription info:', subscriptionInfo);
+    if (import.meta.env.DEV) console.log('MainApp rendered', { businessUser: !!businessUser, business: !!business, user: !!user, subscription: !!subscription });
+    if (import.meta.env.DEV) console.log('Subscription info:', subscriptionInfo);
   }, [businessUser, business, user, subscription, subscriptionInfo]);
 
   if (!businessUser || !business || !user) {
-    console.log('MainApp: Missing data', { businessUser: !!businessUser, business: !!business, user: !!user });
+    if (import.meta.env.DEV) console.log('MainApp: Missing data', { businessUser: !!businessUser, business: !!business, user: !!user });
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
         <div className="text-slate-600">Loading user data...</div>
@@ -79,7 +95,7 @@ export function MainApp() {
               businessId={business.id}
               language={language}
               onSelectClient={(client) => {
-                setSelectedClient(client);
+                setSelectedClient({ ...client, business_id: business!.id, document_type: client.document_type as DocumentType });
                 setShowClientDetails(true);
               }}
               onNewClient={() => {
@@ -99,7 +115,7 @@ export function MainApp() {
                 }}
                 onEdit={(client) => {
                   setShowClientDetails(false);
-                  setSelectedClient(client);
+                  setSelectedClient({ ...client, business_id: business!.id, document_type: client.document_type as DocumentType });
                   setShowClientForm(true);
                 }}
               />

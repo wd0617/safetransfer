@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Search, Plus, CreditCard as Edit, Eye } from 'lucide-react';
+import { Search, Plus, Eye } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTranslation, Language } from '../../lib/i18n';
-import { Database } from '../../lib/database.types';
-
-type Client = Database['public']['Tables']['clients']['Row'];
+type Client = {
+  id: string;
+  full_name: string;
+  document_type: string;
+  document_number: string;
+  nationality: string;
+  phone?: string | null;
+};
 
 interface ClientListProps {
   businessId: string;
