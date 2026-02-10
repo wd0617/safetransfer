@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, LayoutDashboard, Building2, Bell, MessageSquare, History, Lock, Key } from 'lucide-react';
+import { Shield, LayoutDashboard, Building2, Bell, MessageSquare, History, Lock, Key, UserCheck } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { BusinessManagement } from './BusinessManagement';
 import { BusinessDetailWrapper } from './BusinessDetailWrapper';
@@ -8,8 +8,9 @@ import { Messaging } from './Messaging';
 import { AuditLog } from './AuditLog';
 import { SecurityMonitoring } from './SecurityMonitoring';
 import { PasswordResetAssistance } from './PasswordResetAssistance';
+import { RegistrationApprovals } from './RegistrationApprovals';
 
-type ActiveView = 'dashboard' | 'businesses' | 'notifications' | 'messages' | 'audit' | 'security' | 'password-reset';
+type ActiveView = 'dashboard' | 'businesses' | 'approvals' | 'notifications' | 'messages' | 'audit' | 'security' | 'password-reset';
 
 export function SuperAdminPanel() {
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
@@ -66,6 +67,9 @@ export function SuperAdminPanel() {
       case 'password-reset':
         console.log('=== [SuperAdminPanel] Rendering PasswordResetAssistance');
         return <PasswordResetAssistance />;
+      case 'approvals':
+        console.log('=== [SuperAdminPanel] Rendering RegistrationApprovals');
+        return <RegistrationApprovals />;
       default:
         console.log('=== [SuperAdminPanel] Rendering default Dashboard');
         return <Dashboard />;
@@ -74,6 +78,7 @@ export function SuperAdminPanel() {
 
   const menuItems: { id: ActiveView; icon: typeof LayoutDashboard; label: string }[] = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'approvals', icon: UserCheck, label: 'Solicitudes' },
     { id: 'businesses', icon: Building2, label: 'Negocios' },
     { id: 'security', icon: Lock, label: 'Seguridad' },
     { id: 'password-reset', icon: Key, label: 'Recuperación de Contraseña' },
@@ -117,8 +122,8 @@ export function SuperAdminPanel() {
                     }
                   }}
                   className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${isActive
-                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                 >
                   <Icon className="w-5 h-5" />

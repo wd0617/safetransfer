@@ -110,15 +110,15 @@ export function Settings({ business, businessUser, language, onLanguageChange, o
     try {
       // Validaciones
       if (!passwordData.newPassword || !passwordData.confirmPassword) {
-        throw new Error(language === 'es' ? 'Por favor complete ambos campos' : 'Please fill in both fields');
+        throw new Error(language === 'it' ? 'Compila entrambi i campi' : language === 'es' ? 'Por favor complete ambos campos' : 'Please fill in both fields');
       }
 
       if (passwordData.newPassword.length < 6) {
-        throw new Error(language === 'es' ? 'La contraseña debe tener al menos 6 caracteres' : 'Password must be at least 6 characters');
+        throw new Error(language === 'it' ? 'La password deve avere almeno 6 caratteri' : language === 'es' ? 'La contraseña debe tener al menos 6 caracteres' : 'Password must be at least 6 characters');
       }
 
       if (passwordData.newPassword !== passwordData.confirmPassword) {
-        throw new Error(language === 'es' ? 'Las contraseñas no coinciden' : 'Passwords do not match');
+        throw new Error(language === 'it' ? 'Le password non corrispondono' : language === 'es' ? 'Las contraseñas no coinciden' : 'Passwords do not match');
       }
 
       // Cambiar contraseña en Supabase Auth
@@ -215,8 +215,8 @@ export function Settings({ business, businessUser, language, onLanguageChange, o
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h2 className="text-xl font-semibold text-slate-900 mb-6 flex items-center gap-2">
           <Lock className="w-5 h-5" />
-          {language === 'es' ? 'Cambiar Contraseña' :
-            language === 'it' ? 'Cambia Password' : 'Change Password'}
+          {language === 'it' ? 'Cambia Password' :
+            language === 'es' ? 'Cambiar Contraseña' : 'Change Password'}
         </h2>
 
         {passwordError && (
@@ -227,23 +227,23 @@ export function Settings({ business, businessUser, language, onLanguageChange, o
 
         {passwordSuccess && (
           <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-            {language === 'es' ? '¡Contraseña cambiada exitosamente!' :
-              language === 'it' ? 'Password modificata con successo!' : 'Password changed successfully!'}
+            {language === 'it' ? 'Password modificata con successo!' :
+              language === 'es' ? '¡Contraseña cambiada exitosamente!' : 'Password changed successfully!'}
           </div>
         )}
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              {language === 'es' ? 'Nueva Contraseña' :
-                language === 'it' ? 'Nuova Password' : 'New Password'}
+              {language === 'it' ? 'Nuova Password' :
+                language === 'es' ? 'Nueva Contraseña' : 'New Password'}
             </label>
             <div className="relative">
               <input
                 type={showNewPassword ? 'text' : 'password'}
                 value={passwordData.newPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                placeholder={language === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters'}
+                placeholder={language === 'it' ? 'Minimo 6 caratteri' : language === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters'}
                 className="w-full px-4 py-2 pr-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
@@ -258,15 +258,15 @@ export function Settings({ business, businessUser, language, onLanguageChange, o
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              {language === 'es' ? 'Confirmar Nueva Contraseña' :
-                language === 'it' ? 'Conferma Nuova Password' : 'Confirm New Password'}
+              {language === 'it' ? 'Conferma Nuova Password' :
+                language === 'es' ? 'Confirmar Nueva Contraseña' : 'Confirm New Password'}
             </label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={passwordData.confirmPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                placeholder={language === 'es' ? 'Repetir contraseña' : 'Repeat password'}
+                placeholder={language === 'it' ? 'Ripeti la password' : language === 'es' ? 'Repetir contraseña' : 'Repeat password'}
                 className="w-full px-4 py-2 pr-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
@@ -286,8 +286,8 @@ export function Settings({ business, businessUser, language, onLanguageChange, o
           >
             <Lock className="w-4 h-4" />
             {passwordLoading ? t('common.loading') :
-              (language === 'es' ? 'Cambiar Contraseña' :
-                language === 'it' ? 'Cambia Password' : 'Change Password')}
+              (language === 'it' ? 'Cambia Password' :
+                language === 'es' ? 'Cambiar Contraseña' : 'Change Password')}
           </button>
         </div>
       </div>

@@ -48,6 +48,25 @@ export async function isAccountLocked(email: string): Promise<boolean> {
   return Boolean(data);
 }
 
+export interface LoginStatus {
+  is_locked: boolean;
+  locked_until: string | null;
+  failed_attempts: number;
+  max_attempts: number;
+  remaining_attempts: number;
+}
+
+export async function getLoginStatus(email: string): Promise<LoginStatus> {
+  const { data, error } = await (supabase.rpc as any)('get_login_status', {
+    p_email: email,
+  });
+  if (error) {
+    console.error('Error getting login status:', error);
+    return { is_locked: false, locked_until: null, failed_attempts: 0, max_attempts: 5, remaining_attempts: 5 };
+  }
+  return data as LoginStatus;
+}
+
 export async function checkRateLimit(
   identifier: string,
   actionType: string

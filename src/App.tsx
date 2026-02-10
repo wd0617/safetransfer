@@ -2,18 +2,19 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider, useApp } from './contexts/AppContext';
 import { AuthForm } from './components/Auth/AuthForm';
 import { ForcePasswordChange } from './components/Auth/ForcePasswordChange';
+import { PendingApproval } from './components/Auth/PendingApproval';
 import { MainApp } from './components/MainApp';
 import { LandingPage } from './components/Landing/LandingPage';
 import { useEffect, useState } from 'react';
 
 function AppContent() {
-  const { user, businessUser, loading, mustChangePassword, signIn, signUp, refreshUser } = useAuth();
+  const { user, businessUser, loading, mustChangePassword, isPendingApproval, signIn, signUp, refreshUser } = useAuth();
   const { language, setLanguage } = useApp();
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
-    if (import.meta.env.DEV) console.log('App state:', { user: !!user, businessUser: !!businessUser, loading, mustChangePassword });
-  }, [user, businessUser, loading, mustChangePassword]);
+    if (import.meta.env.DEV) console.log('App state:', { user: !!user, businessUser: !!businessUser, loading, mustChangePassword, isPendingApproval });
+  }, [user, businessUser, loading, mustChangePassword, isPendingApproval]);
 
   if (loading) {
     return (
@@ -37,6 +38,11 @@ function AppContent() {
       );
     }
     return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+  }
+
+  // Show pending approval screen for new businesses
+  if (isPendingApproval) {
+    return <PendingApproval />;
   }
 
   if (mustChangePassword) {

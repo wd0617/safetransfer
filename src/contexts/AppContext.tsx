@@ -13,7 +13,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('es');
+  const [language, setLanguage] = useState<Language>('it');
   const [currentView, setCurrentView] = useState('dashboard');
 
   const checkBusinessAccess = async (businessId: string): Promise<boolean> => {

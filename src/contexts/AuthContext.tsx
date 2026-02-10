@@ -3,7 +3,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import {
   logFailedLoginAttempt,
-  isAccountLocked,
+  getLoginStatus,
   getSecurityContext,
   trackSession,
 } from '../lib/security';
@@ -23,7 +23,7 @@ type BusinessUser = {
 type Business = {
   id: string;
   name: string;
-  status?: 'active' | 'trial' | 'blocked' | 'inactive' | null;
+  status?: 'active' | 'trial' | 'blocked' | 'inactive' | 'pending_approval' | 'rejected' | null;
   [key: string]: unknown;
 };
 type Subscription = {
@@ -43,9 +43,10 @@ interface AuthContextType {
   isSuperAdmin: boolean;
   loading: boolean;
   isBusinessBlocked: boolean;
+  isPendingApproval: boolean;
   mustChangePassword: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string, businessName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, businessName: string, extraData?: Record<string, string>) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isBusinessBlocked, setIsBusinessBlocked] = useState(false);
+  const [isPendingApproval, setIsPendingApproval] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -107,14 +109,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSubscription(subData);
 
           if (!buData.is_superadmin) {
-            const blocked = bizData.status !== 'active' && bizData.status !== 'trial';
+            const pending = (bizData.status as string) === 'pending_approval';
+            setIsPendingApproval(pending);
+            const blocked = !pending && bizData.status !== 'active' && bizData.status !== 'trial';
             setIsBusinessBlocked(blocked);
 
             if (blocked) {
               if (import.meta.env.DEV) console.warn('Business is blocked or inactive:', bizData.status);
             }
+            if (pending) {
+              if (import.meta.env.DEV) console.log('Business pending approval:', bizData.name);
+            }
           } else {
             setIsBusinessBlocked(false);
+            setIsPendingApproval(false);
           }
         }
       } else {
@@ -171,16 +179,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const context = getSecurityContext();
 
-    const locked = await isAccountLocked(email);
-    if (locked) {
-      throw new Error('Account is temporarily locked due to suspicious activity. Please contact support.');
+    // Check login status (attempts + lockout)
+    const loginStatus = await getLoginStatus(email);
+
+    if (loginStatus.is_locked) {
+      const lockedUntil = loginStatus.locked_until
+        ? new Date(loginStatus.locked_until).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+        : '';
+      throw new Error(
+        `🔒 Il tuo account è stato temporaneamente bloccato per troppi tentativi falliti.\n\n` +
+        `Verrà sbloccato alle ${lockedUntil}.\n\n` +
+        `Se hai bisogno di assistenza, contatta il supporto: support@safetransfer.it`
+      );
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       await logFailedLoginAttempt(email, context, error.message);
-      throw error;
+
+      // Get updated status after this failed attempt
+      const updatedStatus = await getLoginStatus(email);
+
+      if (updatedStatus.is_locked) {
+        throw new Error(
+          `🔒 Account bloccato. Hai superato il limite di tentativi.\n\n` +
+          `Contatta il supporto per sbloccare il tuo account: support@safetransfer.it`
+        );
+      } else if (updatedStatus.remaining_attempts <= 2 && updatedStatus.remaining_attempts > 0) {
+        throw new Error(
+          `Credenziali errate. ⚠️ Hai ancora ${updatedStatus.remaining_attempts} tentativ${updatedStatus.remaining_attempts === 1 ? 'o' : 'i'} prima che il tuo account venga bloccato.`
+        );
+      } else {
+        throw new Error('Credenziali errate. Verifica la tua email e password.');
+      }
     }
 
     if (data.session && data.user) {
@@ -202,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, businessName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, businessName: string, extraData?: Record<string, string>) => {
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -215,14 +247,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError) throw authError;
       if (!authData.user) throw new Error('User creation failed');
 
-      const { error: functionError } = await supabase
-        .rpc('create_business_and_user', {
-          p_business_name: businessName,
-          p_business_email: email,
-          p_full_name: fullName,
-          p_user_email: email,
-          p_language: 'es',
-        });
+      const { error: functionError } = await (supabase.rpc as any)('create_business_and_user', {
+        p_business_name: businessName,
+        p_business_email: email,
+        p_full_name: fullName,
+        p_user_email: email,
+        p_phone: extraData?.phone || null,
+        p_partita_iva: extraData?.partitaIva || null,
+        p_codice_fiscale: extraData?.codiceFiscale || null,
+        p_pec_email: extraData?.pecEmail || null,
+        p_address: extraData?.address || null,
+        p_city: extraData?.city || null,
+        p_postal_code: extraData?.postalCode || null,
+        p_country: extraData?.country || 'IT',
+        p_business_type: extraData?.businessType || null,
+        p_website: extraData?.website || null,
+        p_language: extraData?.language || 'it',
+      });
 
       if (functionError) {
         console.error('Business creation error:', functionError);
@@ -256,7 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, businessUser, business, subscription, isSuperAdmin, loading, isBusinessBlocked, mustChangePassword, signIn, signUp, signOut, refreshUser }}>
+    <AuthContext.Provider value={{ user, businessUser, business, subscription, isSuperAdmin, loading, isBusinessBlocked, isPendingApproval, mustChangePassword, signIn, signUp, signOut, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
