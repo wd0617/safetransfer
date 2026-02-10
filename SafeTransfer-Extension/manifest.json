@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "SafeTransfer - Captura Automática",
+    "name": "SafeTransfer - Cattura Automatica",
     "version": "1.0.0",
-    "description": "Captura automática de datos de clientes y transferencias desde Western Union, Ria, MoneyGram, Mondial Bony y Monty",
+    "description": "Cattura automatica dei dati di clienti e trasferimenti da Western Union, Ria, MoneyGram, Mondial Bony e Monty",
     "permissions": [
         "activeTab",
         "storage",

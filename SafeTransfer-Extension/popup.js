@@ -61,7 +61,7 @@ async function detectCurrentSystem() {
         }
 
         // No system detected
-        showStatus('info', 'Abre una página de Western Union, Ria, MoneyGram o Mondial Bony para capturar datos.');
+        showStatus('info', 'Apri una pagina di Western Union, Ria, MoneyGram o Mondial Bony per catturare i dati.');
 
     } catch (error) {
         console.error('Error detecting system:', error);
@@ -101,7 +101,7 @@ function setupEventListeners() {
 // Capture data from current page
 async function captureData(type) {
     if (!currentTab || !detectedSystem) {
-        showStatus('error', 'No se detectó un sistema de transferencias compatible.');
+        showStatus('error', 'Nessun sistema di trasferimento compatibile rilevato.');
         return;
     }
 
@@ -123,14 +123,14 @@ async function captureData(type) {
             capturedData.captureType = type;
 
             showPreview(capturedData);
-            showStatus('success', `Datos capturados de ${SYSTEMS[detectedSystem].name}`);
+            showStatus('success', `Dati catturati da ${SYSTEMS[detectedSystem].name}`);
         } else {
-            showStatus('error', 'No se pudieron extraer los datos. Verifica que estés en la página correcta.');
+            showStatus('error', 'Impossibile estrarre i dati. Verifica di essere nella pagina corretta.');
         }
 
     } catch (error) {
         console.error('Capture error:', error);
-        showStatus('error', 'Error al capturar datos: ' + error.message);
+        showStatus('error', 'Errore nella cattura dei dati: ' + error.message);
     } finally {
         btn.classList.remove('loading');
         btn.disabled = false;
@@ -253,7 +253,7 @@ function showPreview(data) {
     }
 
     if (data.transfer && Object.keys(data.transfer).length > 0) {
-        html += '<div style="color: #22c55e; font-size: 11px; margin: 8px 0 4px;">TRANSFERENCIA</div>';
+        html += '<div style="color: #22c55e; font-size: 11px; margin: 8px 0 4px;">TRASFERIMENTO</div>';
         for (const [key, value] of Object.entries(data.transfer)) {
             if (value) {
                 html += `<div class="field">
@@ -265,7 +265,7 @@ function showPreview(data) {
     }
 
     if (!html) {
-        html = '<div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">No se encontraron datos</div>';
+        html = '<div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">Nessun dato trovato</div>';
     }
 
     previewData.innerHTML = html;
@@ -275,17 +275,17 @@ function showPreview(data) {
 // Format field names for display
 function formatFieldName(key) {
     const names = {
-        name: 'Nombre',
+        name: 'Nome',
         document: 'Documento',
-        fiscalCode: 'Código Fiscal',
-        phone: 'Teléfono',
-        birthDate: 'Fecha Nac.',
-        address: 'Dirección',
-        amount: 'Monto',
+        fiscalCode: 'Codice Fiscale',
+        phone: 'Telefono',
+        birthDate: 'Data Nascita',
+        address: 'Indirizzo',
+        amount: 'Importo',
         recipient: 'Destinatario',
-        country: 'País Destino',
-        reference: 'Referencia',
-        commission: 'Comisión'
+        country: 'Paese Dest.',
+        reference: 'Riferimento',
+        commission: 'Commissione'
     };
     return names[key] || key;
 }
@@ -306,14 +306,14 @@ async function sendToSafeTransfer() {
 
         window.open(`${SAFETRANSFER_URL}?${params.toString()}`, '_blank');
 
-        showStatus('success', '¡Datos enviados a SafeTransfer!');
+        showStatus('success', 'Dati inviati a SafeTransfer!');
 
         // Close popup after a moment
         setTimeout(() => window.close(), 1500);
 
     } catch (error) {
         console.error('Error sending data:', error);
-        showStatus('error', 'Error al enviar datos');
+        showStatus('error', 'Errore nell\'invio dei dati');
     }
 }
 
