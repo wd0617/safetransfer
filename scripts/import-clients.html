@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="it">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeTransfer - Importar Clientes</title>
+    <title>SafeTransfer - Importa Clienti</title>
     <style>
         * {
             margin: 0;
@@ -198,74 +198,108 @@
             background: linear-gradient(90deg, #22c55e, #16a34a);
             transition: width 0.3s ease;
         }
+
+        .login-status {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .login-status.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #22c55e;
+        }
+
+        .login-status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #ef4444;
+        }
+
+        small {
+            opacity: 0.7;
+            display: block;
+            margin-top: -12px;
+            margin-bottom: 16px;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>🔄 SafeTransfer - Importar Clientes</h1>
+        <h1>🔄 SafeTransfer - Importa Clienti</h1>
 
-        <!-- Step 1: Configuration -->
+        <!-- Step 1: Login -->
         <div class="card" id="step1">
-            <h2>📋 Paso 1: Configuración</h2>
+            <h2>🔐 Passo 1: Accedi al tuo account</h2>
 
-            <label for="supabaseUrl">URL de Supabase:</label>
-            <input type="text" id="supabaseUrl" value="https://gvgzxfqpduqwvjuoylxf.supabase.co"
+            <label for="supabaseUrl">URL di Supabase:</label>
+            <input type="text" id="supabaseUrl" value="https://xtyznxdfpaycyywruneb.supabase.co"
                 placeholder="https://xxxxx.supabase.co">
 
             <label for="supabaseKey">Supabase Anon Key:</label>
-            <input type="password" id="supabaseKey" placeholder="Tu anon key de Supabase">
-            <small style="opacity: 0.7; display: block; margin-top: -12px; margin-bottom: 16px;">
-                Encuentra esto en: Supabase Dashboard → Settings → API → anon public
+            <input type="password" id="supabaseKey" placeholder="La tua anon key di Supabase">
+            <small>
+                Trovala in: Supabase Dashboard → Settings → API → anon public
             </small>
 
-            <label for="businessId">Business ID (donde importar):</label>
-            <input type="text" id="businessId" placeholder="UUID de tu negocio en SafeTransfer">
-            <small style="opacity: 0.7; display: block; margin-top: -12px; margin-bottom: 16px;">
-                Lo encuentras en la URL cuando estás en SafeTransfer: /dashboard/BUSINESS_ID/...
-            </small>
+            <label for="loginEmail">Email di accesso:</label>
+            <input type="email" id="loginEmail" placeholder="La tua email di SafeTransfer">
+
+            <label for="loginPassword">Password:</label>
+            <input type="password" id="loginPassword" placeholder="La tua password">
+
+            <div id="loginStatus" class="hidden"></div>
+
+            <button onclick="doLogin()">🔑 Accedi</button>
         </div>
 
         <!-- Step 2: Upload Data -->
-        <div class="card" id="step2">
-            <h2>📤 Paso 2: Cargar Datos del Backup</h2>
+        <div class="card hidden" id="step2">
+            <h2>📤 Passo 2: Carica i Dati del Backup</h2>
 
-            <label for="sqlData">Pega aquí el contenido de la sección INSERT INTO `clientes` del backup SQL:</label>
+            <div id="businessInfo"
+                style="margin-bottom: 16px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px;">
+            </div>
+
+            <label for="sqlData">Incolla qui il contenuto della sezione INSERT INTO `clientes` del backup SQL:</label>
             <textarea id="sqlData" placeholder="INSERT INTO `clientes` (`id`, `nombre`, `apellido`, ...) VALUES
 (1, 'Wander', 'Perez', '1994-09-06', 'ax12345', ...),
 (2, 'ORNELA', 'GJYLA', ...);"></textarea>
 
-            <button onclick="parseData()">🔍 Analizar Datos</button>
+            <button onclick="parseData()">🔍 Analizza Dati</button>
         </div>
 
         <!-- Step 3: Preview -->
         <div class="card hidden" id="step3">
-            <h2>👀 Paso 3: Vista Previa</h2>
+            <h2>👀 Passo 3: Anteprima</h2>
 
             <div class="stats">
                 <div class="stat">
                     <div class="stat-value" id="totalClients">0</div>
-                    <div class="stat-label">Clientes encontrados</div>
+                    <div class="stat-label">Clienti trovati</div>
                 </div>
                 <div class="stat">
                     <div class="stat-value" id="withPhone">0</div>
-                    <div class="stat-label">Con teléfono</div>
+                    <div class="stat-label">Con telefono</div>
                 </div>
                 <div class="stat">
                     <div class="stat-value" id="withDOB">0</div>
-                    <div class="stat-label">Con fecha de nac.</div>
+                    <div class="stat-label">Con data di nascita</div>
                 </div>
             </div>
 
-            <label>Vista previa (primeros 20):</label>
+            <label>Anteprima (primi 20):</label>
             <div class="preview-container">
                 <table class="preview-table">
                     <thead>
                         <tr>
-                            <th>Nombre Completo</th>
+                            <th>Nome Completo</th>
                             <th>Documento</th>
-                            <th>Teléfono</th>
-                            <th>Fecha Nac.</th>
+                            <th>Telefono</th>
+                            <th>Data Nascita</th>
                         </tr>
                     </thead>
                     <tbody id="previewBody"></tbody>
@@ -273,15 +307,15 @@
             </div>
 
             <div style="margin-top: 20px;">
-                <button onclick="startImport()">🚀 Iniciar Importación</button>
+                <button onclick="startImport()">🚀 Avvia Importazione</button>
                 <button class="secondary" onclick="document.getElementById('step3').classList.add('hidden')">←
-                    Volver</button>
+                    Indietro</button>
             </div>
         </div>
 
         <!-- Step 4: Import Progress -->
         <div class="card hidden" id="step4">
-            <h2>⏳ Paso 4: Importando...</h2>
+            <h2>⏳ Passo 4: Importazione in corso...</h2>
 
             <div class="progress-bar">
                 <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
@@ -290,19 +324,19 @@
             <div class="stats">
                 <div class="stat">
                     <div class="stat-value log-success" id="importedCount">0</div>
-                    <div class="stat-label">Importados</div>
+                    <div class="stat-label">Importati</div>
                 </div>
                 <div class="stat">
                     <div class="stat-value log-skip" id="skippedCount">0</div>
-                    <div class="stat-label">Ya existían</div>
+                    <div class="stat-label">Già esistenti</div>
                 </div>
                 <div class="stat">
                     <div class="stat-value log-error" id="errorCount">0</div>
-                    <div class="stat-label">Errores</div>
+                    <div class="stat-label">Errori</div>
                 </div>
             </div>
 
-            <label>Log de importación:</label>
+            <label>Log di importazione:</label>
             <div id="log"></div>
         </div>
     </div>
@@ -312,6 +346,72 @@
 
         let parsedClients = [];
         let supabase = null;
+        let currentBusinessId = null;
+
+        // Login to SafeTransfer
+        window.doLogin = async function () {
+            const supabaseUrl = document.getElementById('supabaseUrl').value.trim();
+            const supabaseKey = document.getElementById('supabaseKey').value.trim();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const statusDiv = document.getElementById('loginStatus');
+
+            if (!supabaseUrl || !supabaseKey || !email || !password) {
+                statusDiv.className = 'login-status error';
+                statusDiv.textContent = '⚠️ Compila tutti i campi';
+                statusDiv.classList.remove('hidden');
+                return;
+            }
+
+            supabase = createClient(supabaseUrl, supabaseKey);
+
+            statusDiv.className = 'login-status';
+            statusDiv.textContent = '⏳ Accesso in corso...';
+            statusDiv.classList.remove('hidden');
+            statusDiv.style.background = 'rgba(59, 130, 246, 0.2)';
+            statusDiv.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+            statusDiv.style.color = '#3b82f6';
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                // Get the user's business
+                const { data: businessUsers, error: buError } = await supabase
+                    .from('business_users')
+                    .select('business_id, businesses(id, name)')
+                    .eq('user_id', data.user.id);
+
+                if (buError) throw buError;
+
+                if (!businessUsers || businessUsers.length === 0) {
+                    throw new Error('Nessuna attività associata a questo account');
+                }
+
+                currentBusinessId = businessUsers[0].business_id;
+                const businessName = businessUsers[0].businesses?.name || 'N/A';
+
+                statusDiv.className = 'login-status success';
+                statusDiv.textContent = `✅ Accesso effettuato! Attività: ${businessName}`;
+
+                // Show business info in step 2
+                document.getElementById('businessInfo').innerHTML = `
+                    <strong>🏪 Attività:</strong> ${businessName}<br>
+                    <strong>🆔 Business ID:</strong> <code>${currentBusinessId}</code>
+                `;
+
+                // Show step 2
+                document.getElementById('step2').classList.remove('hidden');
+
+            } catch (err) {
+                statusDiv.className = 'login-status error';
+                statusDiv.textContent = `❌ Errore: ${err.message}`;
+            }
+        };
 
         // Parse SQL INSERT statement
         window.parseData = function () {
@@ -326,21 +426,28 @@
             while ((match = regex.exec(sqlData)) !== null) {
                 const [_, id, nombre, apellido, fechaNac, documento, telefono, foto, fechaReg, ultimaVisita] = match;
 
+                // Skip entries with invalid data
+                const docNum = documento.toUpperCase().trim();
+                if (!docNum || docNum.length < 2) continue;
+
+                const fullName = `${nombre.trim()} ${apellido.trim()}`.toUpperCase();
+                if (!fullName || fullName.trim().length < 2) continue;
+
                 parsedClients.push({
                     id: parseInt(id),
-                    full_name: `${nombre.trim()} ${apellido.trim()}`.toUpperCase(),
+                    full_name: fullName,
                     document_type: 'id_card',
-                    document_number: documento.toUpperCase().trim(),
+                    document_number: docNum,
                     document_country: 'IT',
-                    date_of_birth: fechaNac !== '0000-00-00' && fechaNac.startsWith('19') || fechaNac.startsWith('20') ? fechaNac : null,
-                    phone: telefono !== 'NULL' && telefono ? telefono.replace(/'/g, '').trim() : null,
+                    date_of_birth: (fechaNac !== '0000-00-00' && (fechaNac.startsWith('19') || fechaNac.startsWith('20'))) ? fechaNac : null,
+                    phone: (telefono !== 'NULL' && telefono) ? telefono.replace(/'/g, '').trim() : null,
                     transfer_systems: ['western_union'],
                     nationality: 'Italia'
                 });
             }
 
             if (parsedClients.length === 0) {
-                alert('No se encontraron clientes. Verifica el formato del SQL.');
+                alert('Nessun cliente trovato. Verifica il formato del SQL.');
                 return;
             }
 
@@ -369,16 +476,10 @@
 
         // Start importing
         window.startImport = async function () {
-            const supabaseUrl = document.getElementById('supabaseUrl').value.trim();
-            const supabaseKey = document.getElementById('supabaseKey').value.trim();
-            const businessId = document.getElementById('businessId').value.trim();
-
-            if (!supabaseUrl || !supabaseKey || !businessId) {
-                alert('Completa todos los campos de configuración');
+            if (!supabase || !currentBusinessId) {
+                alert('Devi prima effettuare l\'accesso');
                 return;
             }
-
-            supabase = createClient(supabaseUrl, supabaseKey);
 
             document.getElementById('step4').classList.remove('hidden');
 
@@ -386,7 +487,7 @@
             let imported = 0, skipped = 0, errors = 0;
 
             for (let i = 0; i < parsedClients.length; i++) {
-                const client = { ...parsedClients[i], business_id: businessId };
+                const client = { ...parsedClients[i], business_id: currentBusinessId };
                 delete client.id;
 
                 try {
@@ -394,13 +495,13 @@
                     const { data: existing } = await supabase
                         .from('clients')
                         .select('id')
-                        .eq('business_id', businessId)
+                        .eq('business_id', currentBusinessId)
                         .eq('document_number', client.document_number)
                         .single();
 
                     if (existing) {
                         skipped++;
-                        log.innerHTML += `<div class="log-skip">⏭️ ${client.full_name} - Ya existe</div>`;
+                        log.innerHTML += `<div class="log-skip">⏭️ ${client.full_name} - Già esistente</div>`;
                     } else {
                         const { error } = await supabase.from('clients').insert(client);
 
@@ -427,7 +528,7 @@
                 await new Promise(r => setTimeout(r, 50));
             }
 
-            log.innerHTML += `<div class="log-info"><br>🎉 Importación completada!</div>`;
+            log.innerHTML += `<div class="log-info"><br>🎉 Importazione completata! ${imported} clienti importati, ${skipped} già esistenti, ${errors} errori.</div>`;
         };
     </script>
 </body>
