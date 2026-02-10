@@ -9,7 +9,7 @@ chrome.runtime.onInstalled.addListener((details) => {
         settings: {
             autoDetect: true,
             showNotifications: true,
-            safetransferUrl: 'https://safetransfer-pi.vercel.app'
+            safetransferUrl: 'https://safetransfer.it'
         }
     });
 });
@@ -57,7 +57,7 @@ async function handleCaptureData(data, tab) {
 async function openSafeTransferWithData(data) {
     try {
         const result = await chrome.storage.local.get('settings');
-        const baseUrl = result.settings?.safetransferUrl || 'https://safetransfer-pi.vercel.app';
+        const baseUrl = result.settings?.safetransferUrl || 'https://safetransfer.it';
 
         const params = new URLSearchParams({
             action: 'import',

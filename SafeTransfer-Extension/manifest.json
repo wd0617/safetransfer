@@ -17,7 +17,9 @@
         "https://*.mondialbony.com/*",
         "https://*.mondialbonyservice.it/*",
         "https://*.monty.it/*",
-        "https://safetransfer-pi.vercel.app/*"
+        "https://safetransfer-pi.vercel.app/*",
+        "https://safetransfer.it/*",
+        "https://www.safetransfer.it/*"
     ],
     "action": {
         "default_popup": "popup.html",

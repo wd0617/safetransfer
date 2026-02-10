@@ -1,7 +1,7 @@
 // SafeTransfer Extension - Popup Script
 // Handles user interactions and communicates with content scripts
 
-const SAFETRANSFER_URL = 'https://safetransfer-pi.vercel.app';
+const SAFETRANSFER_URL = 'https://safetransfer.it';
 
 // System detection patterns
 const SYSTEMS = {
