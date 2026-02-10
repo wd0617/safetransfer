@@ -77,7 +77,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
 
   const sendMessage = async () => {
     if (!selectedBusiness || !subject.trim() || !message.trim()) {
-      alert('Please fill in all fields');
+      alert('Compila tutti i campi');
       return;
     }
 
@@ -135,11 +135,11 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
       setMessageType('info');
       loadSentMessages();
       alert(sendAlsoEmail && business?.email
-        ? `✅ Mensaje enviado y email enviado a ${business.email}`
-        : '✅ Mensaje guardado en el sistema');
+        ? `✅ Messaggio inviato ed email inviata a ${business.email}`
+        : '✅ Messaggio salvato nel sistema');
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message');
+      alert('Errore durante l\'invio del messaggio');
     } finally {
       setLoading(false);
     }
@@ -158,28 +158,28 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">Messaging</h2>
-        <p className="text-slate-600 mt-1">Send messages to businesses</p>
+        <h2 className="text-2xl font-bold text-slate-900">Messaggi</h2>
+        <p className="text-slate-600 mt-1">Invia messaggi alle attività</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Send className="w-5 h-5" />
-            Send Message
+            Invia Messaggio
           </h3>
 
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Select Business
+                Seleziona Attività
               </label>
               <select
                 value={selectedBusiness}
                 onChange={(e) => setSelectedBusiness(e.target.value)}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">Select a business...</option>
+                <option value="">Seleziona un'attività...</option>
                 {businesses.map((business) => (
                   <option key={business.id} value={business.id}>
                     {business.name}
@@ -190,41 +190,41 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Message Type
+                Tipo di Messaggio
               </label>
               <select
                 value={messageType}
                 onChange={(e) => setMessageType(e.target.value as 'info' | 'warning' | 'alert' | 'notice')}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="info">Information</option>
-                <option value="notice">Notice</option>
-                <option value="warning">Warning</option>
-                <option value="alert">Alert</option>
+                <option value="info">Informazione</option>
+                <option value="notice">Avviso</option>
+                <option value="warning">Avvertenza</option>
+                <option value="alert">Allerta</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Subject
+                Oggetto
               </label>
               <input
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="Enter message subject"
+                placeholder="Inserisci l'oggetto del messaggio"
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Message
+                Messaggio
               </label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Enter your message"
+                placeholder="Scrivi il tuo messaggio"
                 rows={6}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
@@ -241,7 +241,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
               />
               <label htmlFor="sendAlsoEmail" className="text-sm text-blue-800 font-medium cursor-pointer flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Enviar también por email al negocio
+                Invia anche per email all'attività
               </label>
             </div>
 
@@ -251,7 +251,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
               className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400 flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4" />
-              {loading ? 'Enviando...' : sendAlsoEmail ? 'Enviar Mensaje + Email' : 'Enviar Mensaje'}
+              {loading ? 'Invio in corso...' : sendAlsoEmail ? 'Invia Messaggio + Email' : 'Invia Messaggio'}
             </button>
           </div>
         </div>
@@ -259,7 +259,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Mail className="w-5 h-5" />
-            Recent Messages
+            Messaggi Recenti
           </h3>
 
           <div className="space-y-3 max-h-[600px] overflow-y-auto">
@@ -272,7 +272,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
                     <div className="flex-1">
                       <p className="font-medium text-slate-900">{msg.subject}</p>
                       <p className="text-sm text-slate-600 mt-1">
-                        To: {business?.name || 'Unknown'}
+                        To: {business?.name || 'Sconosciuto'}
                       </p>
                     </div>
                     <span
@@ -289,7 +289,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
                       {msg.sent_at ? new Date(msg.sent_at).toLocaleString() : '-'}
                     </p>
                     {msg.is_read && (
-                      <span className="text-xs text-green-600 font-medium">Read</span>
+                      <span className="text-xs text-green-600 font-medium">Letto</span>
                     )}
                   </div>
                 </div>
@@ -299,7 +299,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
             {sentMessages.length === 0 && (
               <div className="text-center py-12">
                 <MessageSquare className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                <p className="text-slate-600">No messages sent yet</p>
+                <p className="text-slate-600">Nessun messaggio inviato</p>
               </div>
             )}
           </div>

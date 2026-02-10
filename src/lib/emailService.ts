@@ -3,11 +3,11 @@ import { supabase } from './supabase';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 interface SendEmailParams {
-    to: string | string[];
-    subject: string;
-    html?: string;
-    text?: string;
-    replyTo?: string;
+  to: string | string[];
+  subject: string;
+  html?: string;
+  text?: string;
+  replyTo?: string;
 }
 
 /**
@@ -15,63 +15,63 @@ interface SendEmailParams {
  * Requires the user to be authenticated.
  */
 export async function sendEmail({ to, subject, html, text, replyTo }: SendEmailParams): Promise<{ success: boolean; error?: string }> {
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('Not authenticated');
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
 
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({
-                to,
-                subject,
-                html,
-                text,
-                reply_to: replyTo,
-            }),
-        });
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        to,
+        subject,
+        html,
+        text,
+        reply_to: replyTo,
+      }),
+    });
 
-        const data = await response.json();
+    const data = await response.json();
 
-        if (!response.ok) {
-            console.error('Email send error:', data);
-            return { success: false, error: data.error || 'Failed to send email' };
-        }
-
-        return { success: true };
-    } catch (error: any) {
-        console.error('Email service error:', error);
-        return { success: false, error: error.message };
+    if (!response.ok) {
+      console.error('Email send error:', data);
+      return { success: false, error: data.error || 'Failed to send email' };
     }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Email service error:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 /**
  * Generates a styled HTML email template for SafeTransfer messages.
  */
 export function generateEmailTemplate({
-    subject,
-    body,
-    messageType = 'info',
-    businessName,
+  subject,
+  body,
+  messageType = 'info',
+  businessName,
 }: {
-    subject: string;
-    body: string;
-    messageType?: string;
-    businessName?: string;
+  subject: string;
+  body: string;
+  messageType?: string;
+  businessName?: string;
 }): string {
-    const typeColors: Record<string, { bg: string; text: string; label: string }> = {
-        info: { bg: '#eff6ff', text: '#1d4ed8', label: '📋 Información' },
-        warning: { bg: '#fffbeb', text: '#b45309', label: '⚠️ Advertencia' },
-        alert: { bg: '#fef2f2', text: '#dc2626', label: '🚨 Alerta' },
-        notice: { bg: '#f0fdf4', text: '#15803d', label: '📌 Aviso' },
-    };
+  const typeColors: Record<string, { bg: string; text: string; label: string }> = {
+    info: { bg: '#eff6ff', text: '#1d4ed8', label: '📋 Informazione' },
+    warning: { bg: '#fffbeb', text: '#b45309', label: '⚠️ Avvertenza' },
+    alert: { bg: '#fef2f2', text: '#dc2626', label: '🚨 Allerta' },
+    notice: { bg: '#f0fdf4', text: '#15803d', label: '📌 Avviso' },
+  };
 
-    const colors = typeColors[messageType] || typeColors.info;
+  const colors = typeColors[messageType] || typeColors.info;
 
-    return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -90,7 +90,7 @@ export function generateEmailTemplate({
 
     <!-- Body -->
     <div style="background:#fff;padding:32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-      ${businessName ? `<p style="color:#64748b;font-size:14px;margin:0 0 16px;">Para: <strong style="color:#0f172a;">${businessName}</strong></p>` : ''}
+      ${businessName ? `<p style="color:#64748b;font-size:14px;margin:0 0 16px;">A: <strong style="color:#0f172a;">${businessName}</strong></p>` : ''}
       
       <!-- Message Type Badge -->
       <div style="display:inline-block;background:${colors.bg};color:${colors.text};padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:20px;">
@@ -104,10 +104,10 @@ export function generateEmailTemplate({
     <!-- Footer -->
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;padding:24px;text-align:center;">
       <p style="color:#94a3b8;font-size:12px;margin:0 0 8px;">
-        Este email fue enviado desde <strong>SafeTransfer</strong> — Sistema de Compliance para Money Transfer
+        Questa email è stata inviata da <strong>SafeTransfer</strong> — Sistema di Compliance per Money Transfer
       </p>
       <p style="color:#94a3b8;font-size:11px;margin:0;">
-        © ${new Date().getFullYear()} SafeTransfer.it · Cumple con D.Lgs 231/2007 y GDPR
+        © ${new Date().getFullYear()} SafeTransfer.it · Conforme al D.Lgs 231/2007 e GDPR
       </p>
     </div>
   </div>
