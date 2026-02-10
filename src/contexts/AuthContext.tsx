@@ -263,6 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         p_business_type: extraData?.businessType || null,
         p_website: extraData?.website || null,
         p_language: extraData?.language || 'it',
+        p_auth_user_id: authData.user.id,
       });
 
       if (functionError) {

@@ -5,6 +5,7 @@
     "description": "Cattura automatica dei dati di clienti e trasferimenti da Western Union, Ria, MoneyGram, Mondial Bony e Monty",
     "permissions": [
         "activeTab",
+        "tabs",
         "storage",
         "scripting"
     ],

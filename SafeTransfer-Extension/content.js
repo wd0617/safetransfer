@@ -69,14 +69,153 @@ if (supportedSites.some(site => currentUrl.includes(site))) {
     }
 }
 
-// Listen for messages from popup
+// Listen for messages from popup and background
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'EXTRACT_DATA') {
         const data = extractDataFromPage(message.system, message.captureType);
         sendResponse(data);
     }
+
+    if (message.type === 'RECEIPT_PAGE_DETECTED') {
+        showReceiptReminder();
+        sendResponse({ success: true });
+    }
+
     return true;
 });
+
+// ============================================================
+// RECEIPT PAGE REMINDER BANNER
+// Shows a prominent, animated banner when employee reaches
+// a receipt/confirmation page, reminding them to export data.
+// ============================================================
+function showReceiptReminder() {
+    // Don't show if already visible
+    if (document.getElementById('safetransfer-receipt-reminder')) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'safetransfer-receipt-reminder';
+    banner.innerHTML = `
+    <div id="st-reminder-banner" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f1c2e 100%);
+      color: white;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 2147483647;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 15px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      animation: st-slide-down 0.4s ease-out;
+      border-bottom: 3px solid #22c55e;
+    ">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" style="flex-shrink:0;">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      <span style="flex:1;text-align:center;">
+        <strong>🔔 SafeTransfer:</strong> 
+        Ricordati di esportare questa operazione! Apri l'estensione per catturare i dati del cliente.
+      </span>
+      <button id="st-reminder-export" style="
+        background: #22c55e;
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.2s;
+      " onmouseover="this.style.background='#16a34a'" onmouseout="this.style.background='#22c55e'">
+        📤 Esporta Ora
+      </button>
+      <button id="st-reminder-dismiss" style="
+        background: transparent;
+        color: rgba(255,255,255,0.7);
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+      " onmouseover="this.style.color='white';this.style.borderColor='white'" 
+        onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.borderColor='rgba(255,255,255,0.3)'">
+        ✕ Chiudi
+      </button>
+    </div>
+    <style>
+      @keyframes st-slide-down {
+        from { transform: translateY(-100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes st-slide-up {
+        from { transform: translateY(0); opacity: 1; }
+        to { transform: translateY(-100%); opacity: 0; }
+      }
+    </style>
+    `;
+
+    document.body.appendChild(banner);
+
+    // Dismiss button
+    document.getElementById('st-reminder-dismiss').addEventListener('click', () => {
+        const bannerEl = document.getElementById('st-reminder-banner');
+        if (bannerEl) {
+            bannerEl.style.animation = 'st-slide-up 0.3s ease-in forwards';
+            setTimeout(() => banner.remove(), 300);
+        }
+        // Notify background to clear badge
+        chrome.runtime.sendMessage({ type: 'RECEIPT_EXPORTED' });
+    });
+
+    // Export button - triggers popup action
+    document.getElementById('st-reminder-export').addEventListener('click', () => {
+        // Send message to background to open SafeTransfer
+        chrome.runtime.sendMessage({ type: 'OPEN_SAFETRANSFER', data: {} });
+        // Also try to auto-extract data
+        const system = detectCurrentSystem();
+        if (system) {
+            const data = extractDataFromPage(system, 'both');
+            chrome.runtime.sendMessage({ type: 'CAPTURE_DATA', data });
+        }
+        // Close banner
+        const bannerEl = document.getElementById('st-reminder-banner');
+        if (bannerEl) {
+            bannerEl.style.animation = 'st-slide-up 0.3s ease-in forwards';
+            setTimeout(() => banner.remove(), 300);
+        }
+        chrome.runtime.sendMessage({ type: 'RECEIPT_EXPORTED' });
+    });
+
+    // Auto-dismiss after 30 seconds
+    setTimeout(() => {
+        const existing = document.getElementById('st-reminder-banner');
+        if (existing) {
+            existing.style.animation = 'st-slide-up 0.3s ease-in forwards';
+            setTimeout(() => banner.remove(), 300);
+        }
+    }, 30000);
+}
+
+// Detect which money transfer system is currently open
+function detectCurrentSystem() {
+    const url = window.location.href.toLowerCase();
+    if (url.includes('westernunion')) return 'western_union';
+    if (url.includes('riamoneytransfer')) return 'ria';
+    if (url.includes('moneygram')) return 'moneygram';
+    if (url.includes('mondialbony')) return 'mondial_bony';
+    if (url.includes('monty')) return 'monty';
+    return null;
+}
 
 // Main extraction function
 function extractDataFromPage(system, captureType) {
