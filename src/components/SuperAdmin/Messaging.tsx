@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, Send, Mail } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { sendEmail, generateEmailTemplate } from '../../lib/emailService';
 
 
 type Business = {
@@ -32,6 +33,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
   const [message, setMessage] = useState('');
   const [sentMessages, setSentMessages] = useState<AdminMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sendAlsoEmail, setSendAlsoEmail] = useState(true);
 
   useEffect(() => {
     loadBusinesses();
@@ -85,6 +87,7 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Not authenticated');
 
+      // Save message to database
       const { error } = await supabase.from('admin_messages').insert({
         business_id: selectedBusiness,
         sender_id: user.user.id,
@@ -96,11 +99,33 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
 
       if (error) throw error;
 
+      // Send real email if option is enabled
+      const business = businesses.find(b => b.id === selectedBusiness);
+      if (sendAlsoEmail && business?.email) {
+        const html = generateEmailTemplate({
+          subject,
+          body: message,
+          messageType,
+          businessName: business.name,
+        });
+
+        const emailResult = await sendEmail({
+          to: business.email,
+          subject: `[SafeTransfer] ${subject}`,
+          html,
+        });
+
+        if (!emailResult.success) {
+          console.warn('Email could not be sent:', emailResult.error);
+          // Don't fail the whole operation - message is already saved
+        }
+      }
+
       await supabase.from('admin_audit_log').insert({
         admin_user_id: user.user.id,
         business_id: selectedBusiness,
         action_type: 'message_sent',
-        action_description: `Sent ${messageType} message: ${subject}`,
+        action_description: `Sent ${messageType} message: ${subject}${sendAlsoEmail ? ' (+ email)' : ''}`,
         entity_type: 'message',
         entity_id: selectedBusiness,
       });
@@ -109,7 +134,9 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
       setMessage('');
       setMessageType('info');
       loadSentMessages();
-      alert('Message sent successfully');
+      alert(sendAlsoEmail && business?.email
+        ? `✅ Mensaje enviado y email enviado a ${business.email}`
+        : '✅ Mensaje guardado en el sistema');
     } catch (error) {
       console.error('Error sending message:', error);
       alert('Failed to send message');
@@ -203,12 +230,28 @@ export function Messaging({ selectedBusinessId }: MessagingProps) {
               />
             </div>
 
+            {/* Email toggle */}
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <input
+                type="checkbox"
+                id="sendAlsoEmail"
+                checked={sendAlsoEmail}
+                onChange={(e) => setSendAlsoEmail(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="sendAlsoEmail" className="text-sm text-blue-800 font-medium cursor-pointer flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Enviar también por email al negocio
+              </label>
+            </div>
+
             <button
               onClick={sendMessage}
               disabled={loading}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400 flex items-center justify-center gap-2"
             >
-              {loading ? 'Sending...' : 'Send Message'}
+              <Send className="w-4 h-4" />
+              {loading ? 'Enviando...' : sendAlsoEmail ? 'Enviar Mensaje + Email' : 'Enviar Mensaje'}
             </button>
           </div>
         </div>
