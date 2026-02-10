@@ -8,9 +8,10 @@ interface AuthFormProps {
   onSignUp: (email: string, password: string, fullName: string, businessName: string) => Promise<void>;
   language: Language;
   onLanguageChange: (lang: Language) => void;
+  onBackToLanding?: () => void;
 }
 
-export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange }: AuthFormProps) {
+export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBackToLanding }: AuthFormProps) {
   const { t } = useTranslation(language);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -171,6 +172,15 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange }: Aut
   // Main Login/Signup View
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      {onBackToLanding && (
+        <button
+          onClick={onBackToLanding}
+          className="absolute top-4 left-4 flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-medium px-4 py-2 rounded-lg hover:bg-white/80 transition-all"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Volver
+        </button>
+      )}
       <div className="absolute top-4 right-4">
         <select
           value={language}

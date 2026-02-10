@@ -3,11 +3,13 @@ import { AppProvider, useApp } from './contexts/AppContext';
 import { AuthForm } from './components/Auth/AuthForm';
 import { ForcePasswordChange } from './components/Auth/ForcePasswordChange';
 import { MainApp } from './components/MainApp';
-import { useEffect } from 'react';
+import { LandingPage } from './components/Landing/LandingPage';
+import { useEffect, useState } from 'react';
 
 function AppContent() {
   const { user, businessUser, loading, mustChangePassword, signIn, signUp, refreshUser } = useAuth();
   const { language, setLanguage } = useApp();
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     if (import.meta.env.DEV) console.log('App state:', { user: !!user, businessUser: !!businessUser, loading, mustChangePassword });
@@ -21,15 +23,20 @@ function AppContent() {
     );
   }
 
+  // If user is not authenticated, show landing or auth form
   if (!user || !businessUser) {
-    return (
-      <AuthForm
-        onSignIn={signIn}
-        onSignUp={signUp}
-        language={language}
-        onLanguageChange={setLanguage}
-      />
-    );
+    if (showAuth) {
+      return (
+        <AuthForm
+          onSignIn={signIn}
+          onSignUp={signUp}
+          language={language}
+          onLanguageChange={setLanguage}
+          onBackToLanding={() => setShowAuth(false)}
+        />
+      );
+    }
+    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
   }
 
   if (mustChangePassword) {
