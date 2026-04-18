@@ -252,16 +252,15 @@ export function CountrySelect({
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative min-w-0" ref={dropdownRef}>
       <label className="block text-sm font-medium text-slate-700 mb-1">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
 
       <div
-        className={`relative cursor-pointer ${
-          error ? 'ring-2 ring-red-500' : ''
-        }`}
+        className={`relative cursor-pointer ${error ? 'ring-2 ring-red-500' : ''
+          }`}
         onClick={() => {
           setIsOpen(!isOpen);
           if (!isOpen) {
@@ -270,26 +269,25 @@ export function CountrySelect({
         }}
       >
         <div
-          className={`w-full px-4 py-2.5 rounded-lg border-2 transition-colors flex items-center justify-between ${
-            isOpen
+          className={`w-full px-4 py-2.5 rounded-lg border-2 transition-colors flex items-center justify-between min-w-0 overflow-hidden ${isOpen
               ? 'border-blue-500 bg-white'
               : error
-              ? 'border-red-300 bg-white hover:border-red-400'
-              : 'border-slate-300 bg-white hover:border-slate-400'
-          }`}
+                ? 'border-red-300 bg-white hover:border-red-400'
+                : 'border-slate-300 bg-white hover:border-slate-400'
+            }`}
         >
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
             {selectedCountry ? (
               <>
-                <span className="text-2xl flex-shrink-0">{selectedCountry.flag}</span>
-                <span className="text-slate-900 truncate">{selectedCountry.name}</span>
+                <span className="text-lg flex-shrink-0">{selectedCountry.flag}</span>
+                <span className="text-slate-900 truncate block">{selectedCountry.name}</span>
               </>
             ) : (
-              <span className="text-slate-400">{placeholder}</span>
+              <span className="text-slate-400 truncate">{placeholder}</span>
             )}
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0 ml-1">
             {value && (
               <button
                 type="button"
@@ -303,9 +301,8 @@ export function CountrySelect({
               </button>
             )}
             <ChevronDown
-              className={`w-5 h-5 text-slate-400 transition-transform ${
-                isOpen ? 'transform rotate-180' : ''
-              }`}
+              className={`w-5 h-5 text-slate-400 transition-transform ${isOpen ? 'transform rotate-180' : ''
+                }`}
             />
           </div>
         </div>
@@ -342,9 +339,8 @@ export function CountrySelect({
                         e.stopPropagation();
                         handleSelect(country);
                       }}
-                      className={`w-full px-4 py-2.5 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left ${
-                        value === country.name ? 'bg-blue-50 font-medium' : ''
-                      }`}
+                      className={`w-full px-4 py-2.5 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left ${value === country.name ? 'bg-blue-50 font-medium' : ''
+                        }`}
                     >
                       <span className="text-2xl flex-shrink-0">{country.flag}</span>
                       <span className="text-slate-900 truncate">{country.name}</span>

@@ -17,7 +17,7 @@ type Subscription = {
   id: string;
   business_id: string;
   plan_type?: string | null;
-  status: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
+  status: 'active' | 'trial' | 'suspended' | 'cancelled' | 'pending' | null;
   is_trial?: boolean | null;
   trial_start_date?: string | null;
   trial_end_date?: string | null;
@@ -31,7 +31,7 @@ type Payment = {
   amount: number;
   payment_date: string;
   due_date: string | null;
-  status: 'pending' | 'paid' | 'failed' | 'refunded';
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
 };
 type BusinessUser = {
   id: string;
@@ -340,7 +340,7 @@ export function BusinessDetail({ businessId, onBack }: BusinessDetailProps) {
         amount: numAmount,
         payment_date: new Date().toISOString(),
         due_date: new Date().toISOString(),
-        status: 'paid' as const,
+        status: 'completed' as const,
       };
 
       console.log('=== [BusinessDetail] Inserting payment:', paymentData);
@@ -795,7 +795,7 @@ export function BusinessDetail({ businessId, onBack }: BusinessDetailProps) {
                       </p>
                     </div>
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${payment.status === 'paid'
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${payment.status === 'completed'
                         ? 'bg-green-100 text-green-800'
                         : payment.status === 'pending'
                           ? 'bg-yellow-100 text-yellow-800'

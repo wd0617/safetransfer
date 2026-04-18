@@ -45,7 +45,7 @@ export function Dashboard() {
       const activeBusinesses = businesses.data?.filter((b) => b.status === 'active').length || 0;
       const trialBusinesses = subscriptions.data?.filter((s) => s.is_trial && s.status === 'active').length || 0;
 
-      const totalRevenue = payments.data?.filter((p) => p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+      const totalRevenue = payments.data?.filter((p) => p.status === 'completed').reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
@@ -54,7 +54,7 @@ export function Dashboard() {
           ?.filter((p) => {
             const paymentDate = new Date(p.payment_date);
             return (
-              p.status === 'paid' &&
+              p.status === 'completed' &&
               paymentDate.getMonth() === currentMonth &&
               paymentDate.getFullYear() === currentYear
             );

@@ -10,7 +10,7 @@ type Business = {
 type Subscription = {
   id: string;
   business_id: string;
-  status?: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
+  status?: 'active' | 'trial' | 'suspended' | 'cancelled' | 'pending' | null;
   next_payment_date?: string | null;
   is_trial?: boolean | null;
   trial_end_date?: string | null;

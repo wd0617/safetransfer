@@ -9,7 +9,7 @@ type AdminNotification = {
   notification_type: string;
   title: string;
   message: string;
-  priority: 'normal' | 'high' | 'urgent';
+  priority: 'low' | 'normal' | 'high' | 'critical';
   is_read: boolean | null;
   created_at: string | null;
 };
@@ -122,7 +122,7 @@ export function PaymentNotifications({ onNotificationClick }: PaymentNotificatio
               notification_type: 'trial_expiring',
               title: 'Trial Expiring Soon',
               message: `Trial for ${sub.businesses?.name || 'Unknown Business'} expires in ${daysUntil} days`,
-              priority: daysUntil <= 3 ? 'urgent' : 'high',
+              priority: daysUntil <= 3 ? 'critical' : 'high',
             });
           }
         }

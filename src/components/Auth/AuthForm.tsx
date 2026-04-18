@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LogIn, Mail, ArrowLeft, Building2, User, MapPin, FileText, ChevronRight, ChevronLeft, Shield } from 'lucide-react';
 import { useTranslation, Language } from '../../lib/i18n';
 import { supabase } from '../../lib/supabase';
+import { validateAntiBot, createFormTimer, isTurnstileEnabled, TURNSTILE_SITE_KEY } from '../../lib/antiBot';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 interface AuthFormProps {
   onSignIn: (email: string, password: string) => Promise<void>;
@@ -296,6 +298,18 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
   const [website, setWebsite] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
 
+  // Anti-bot protection
+  const [honeypot, setHoneypot] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>();
+  const formTimerRef = useRef<number>(createFormTimer());
+  const turnstileRef = useRef<any>(null);
+
+  // Reset timer when switching between login/signup
+  useEffect(() => {
+    formTimerRef.current = createFormTimer();
+    setCaptchaToken(undefined);
+  }, [isSignUp]);
+
   const totalSteps = 3;
 
   const validateStep = (step: number): string | null => {
@@ -341,6 +355,22 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+
+    // Anti-bot validation
+    const antiBotCheck = validateAntiBot({
+      honeypotValue: honeypot,
+      formStartTime: formTimerRef.current,
+      isSignUp,
+      action: isSignUp ? 'signup' : 'login',
+      captchaToken,
+    });
+
+    if (!antiBotCheck.passed) {
+      // For bots, silently fail or show generic error
+      setError(antiBotCheck.reason || 'An error occurred. Please try again.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -363,6 +393,7 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
           businessType,
           website,
           language,
+          ...(captchaToken ? { captchaToken } : {}),
         });
       } else {
         await onSignIn(email, password);
@@ -372,6 +403,9 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
+      // Reset captcha for next attempt
+      setCaptchaToken(undefined);
+      turnstileRef.current?.reset();
     }
   };
 
@@ -379,6 +413,20 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+
+    // Anti-bot rate limit for password resets
+    const antiBotCheck = validateAntiBot({
+      honeypotValue: honeypot,
+      formStartTime: formTimerRef.current,
+      isSignUp: false,
+      action: 'forgot',
+    });
+
+    if (!antiBotCheck.passed) {
+      setError(antiBotCheck.reason || 'An error occurred. Please try again.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -506,6 +554,19 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
             )}
 
             <form onSubmit={handleSubmit}>
+              {/* Honeypot - invisible to real users, bots auto-fill it */}
+              <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
+                <label htmlFor="website_url">Website URL</label>
+                <input
+                  type="text"
+                  id="website_url"
+                  name="website_url"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
               {/* ===== STEP 1: Account ===== */}
               {signupStep === 1 && (
                 <div className="space-y-4">
@@ -668,6 +729,19 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
                       {ft(language, 'step3.termsGdpr')}
                     </span>
                   </label>
+
+                  {/* Turnstile CAPTCHA (only shows when configured) */}
+                  {isTurnstileEnabled() && (
+                    <div className="flex justify-center mt-4">
+                      <Turnstile
+                        ref={turnstileRef}
+                        siteKey={TURNSTILE_SITE_KEY}
+                        onSuccess={(token) => setCaptchaToken(token)}
+                        onExpire={() => setCaptchaToken(undefined)}
+                        options={{ theme: 'light', size: 'normal' }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -685,7 +759,7 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
                     {ft(language, 'nav.next')}<ChevronRight className="w-4 h-4" />
                   </button>
                 ) : (
-                  <button type="submit" disabled={loading || !acceptTerms}
+                  <button type="submit" disabled={loading || !acceptTerms || (isTurnstileEnabled() && !captchaToken)}
                     className="flex-1 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     {loading ? ft(language, 'nav.submitting') : ft(language, 'nav.submit')}
                   </button>
@@ -738,10 +812,10 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
 
           {error && (
             <div className={`mb-6 p-4 rounded-lg text-sm ${error.includes('🔒')
-                ? 'bg-red-100 border-2 border-red-300 text-red-800'
-                : error.includes('⚠️')
-                  ? 'bg-amber-50 border border-amber-300 text-amber-800'
-                  : 'bg-red-50 border border-red-200 text-red-700'
+              ? 'bg-red-100 border-2 border-red-300 text-red-800'
+              : error.includes('⚠️')
+                ? 'bg-amber-50 border border-amber-300 text-amber-800'
+                : 'bg-red-50 border border-red-200 text-red-700'
               }`}>
               {error.split('\n').map((line, i) => (
                 <p key={i} className={i > 0 ? 'mt-2' : ''}>
@@ -760,6 +834,19 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Honeypot - invisible to real users, bots auto-fill it */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
+              <label htmlFor="company_website">Company Website</label>
+              <input
+                type="text"
+                id="company_website"
+                name="company_website"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
             <div>
               <label className={labelClass}>{t('auth.email')}</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
@@ -768,7 +855,18 @@ export function AuthForm({ onSignIn, onSignUp, language, onLanguageChange, onBac
               <label className={labelClass}>{t('auth.password')}</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputClass} />
             </div>
-            <button type="submit" disabled={loading}
+            {isTurnstileEnabled() && (
+              <div className="flex justify-center">
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={TURNSTILE_SITE_KEY}
+                  onSuccess={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(undefined)}
+                  options={{ theme: 'light', size: 'normal' }}
+                />
+              </div>
+            )}
+            <button type="submit" disabled={loading || (isTurnstileEnabled() && !captchaToken)}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? t('common.loading') : t('auth.signIn')}
             </button>

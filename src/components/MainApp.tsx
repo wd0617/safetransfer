@@ -14,8 +14,10 @@ import { BlockedBusinessMessage } from './Shared/BlockedBusinessMessage';
 import { SubscriptionNotification } from './Shared/SubscriptionNotification';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
- 
+import { useBusinessColors } from '../hooks/useBusinessColors';
 import { calculateSubscriptionInfo } from '../lib/subscriptionUtils';
+import { Card, Skeleton } from './ui';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type DocumentType = 'passport' | 'id_card' | 'residence_permit' | 'drivers_license';
 type Client = {
@@ -35,6 +37,12 @@ type Client = {
   country?: string;
 };
 
+const pageVariants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+};
+
 export function MainApp() {
   const { signOut, businessUser, business, user, subscription, isSuperAdmin, isBusinessBlocked, refreshUser } = useAuth();
   const { language, setLanguage, currentView, setCurrentView } = useApp();
@@ -47,6 +55,12 @@ export function MainApp() {
 
   const subscriptionInfo = calculateSubscriptionInfo(subscription, language);
 
+  // Apply business custom colors
+  useBusinessColors(business ? {
+    primary_color: business.primary_color as string | undefined,
+    secondary_color: business.secondary_color as string | undefined,
+  } : undefined);
+
   useEffect(() => {
     if (import.meta.env.DEV) console.log('MainApp rendered', { businessUser: !!businessUser, business: !!business, user: !!user, subscription: !!subscription });
     if (import.meta.env.DEV) console.log('Subscription info:', subscriptionInfo);
@@ -55,8 +69,16 @@ export function MainApp() {
   if (!businessUser || !business || !user) {
     if (import.meta.env.DEV) console.log('MainApp: Missing data', { businessUser: !!businessUser, business: !!business, user: !!user });
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="text-slate-600">Loading user data...</div>
+      <div className="min-h-screen bg-surface-secondary flex items-center justify-center">
+        <Card className="p-8 space-y-4 w-80">
+          <div className="flex justify-center">
+            <Skeleton className="h-12 w-12 rounded-xl" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3 mx-auto" />
+          </div>
+        </Card>
       </div>
     );
   }
@@ -103,35 +125,51 @@ export function MainApp() {
                 setShowClientForm(true);
               }}
             />
-            {showClientDetails && selectedClient && (
-              <ClientDetails
-                client={selectedClient}
-                businessId={business.id}
-                userId={user.id}
-                language={language}
-                onClose={() => {
-                  setShowClientDetails(false);
-                  setSelectedClient(null);
-                }}
-                onEdit={(client) => {
-                  setShowClientDetails(false);
-                  setSelectedClient({ ...client, business_id: business!.id, document_type: client.document_type as DocumentType });
-                  setShowClientForm(true);
-                }}
-              />
-            )}
-            {showClientForm && (
-              <ClientForm
-                businessId={business.id}
-                language={language}
-                client={selectedClient}
-                onClose={() => {
-                  setShowClientForm(false);
-                  setSelectedClient(null);
-                }}
-                onSaved={handleRefresh}
-              />
-            )}
+            <AnimatePresence>
+              {showClientDetails && selectedClient && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <ClientDetails
+                    client={selectedClient}
+                    businessId={business.id}
+                    userId={user.id}
+                    language={language}
+                    onClose={() => {
+                      setShowClientDetails(false);
+                      setSelectedClient(null);
+                    }}
+                    onEdit={(client) => {
+                      setShowClientDetails(false);
+                      setSelectedClient({ ...client, business_id: business!.id, document_type: client.document_type as DocumentType });
+                      setShowClientForm(true);
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {showClientForm && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <ClientForm
+                    businessId={business.id}
+                    language={language}
+                    client={selectedClient}
+                    onClose={() => {
+                      setShowClientForm(false);
+                      setSelectedClient(null);
+                    }}
+                    onSaved={handleRefresh}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         );
 
@@ -144,15 +182,23 @@ export function MainApp() {
               language={language}
               onNewTransfer={() => setShowTransferForm(true)}
             />
-            {showTransferForm && (
-              <TransferForm
-                businessId={business.id}
-                userId={user.id}
-                language={language}
-                onClose={() => setShowTransferForm(false)}
-                onSaved={handleRefresh}
-              />
-            )}
+            <AnimatePresence>
+              {showTransferForm && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <TransferForm
+                    businessId={business.id}
+                    userId={user.id}
+                    language={language}
+                    onClose={() => setShowTransferForm(false)}
+                    onSaved={handleRefresh}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         );
 
@@ -183,7 +229,7 @@ export function MainApp() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-surface-secondary dark:bg-slate-900">
       {!isSuperAdmin && showNotification && (
         <SubscriptionNotification
           businessId={business.id}
@@ -205,8 +251,21 @@ export function MainApp() {
         userRole={businessUser.role}
         isSuperAdmin={isSuperAdmin}
       />
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto p-8">{renderContent()}</div>
+      <div className="flex-1 overflow-auto pt-14 lg:pt-0">
+        <div className="max-w-7xl mx-auto p-4 lg:p-8">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentView + refreshKey}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.2 }}
+            >
+              {renderContent()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

@@ -18,74 +18,204 @@
                 </svg>
                 <h1>SafeTransfer</h1>
             </div>
-            <span class="version">v1.0</span>
+            <div class="header-actions">
+                <button id="btn-settings" class="btn-icon" title="Impostazioni">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                </button>
+                <span class="version">v1.1</span>
+            </div>
         </header>
 
-        <div id="status-bar" class="status-bar hidden">
-            <span id="status-icon">✓</span>
-            <span id="status-text"></span>
-        </div>
+        <!-- ===== MAIN VIEW ===== -->
+        <div id="main-view">
+            <div id="status-bar" class="status-bar hidden">
+                <span id="status-icon">✓</span>
+                <span id="status-text"></span>
+            </div>
 
-        <div id="detected-system" class="detected-system hidden">
-            <span class="label">Sistema rilevato:</span>
-            <span id="system-name" class="system-name"></span>
-        </div>
+            <div id="detected-system" class="detected-system hidden">
+                <span class="label">Sistema rilevato:</span>
+                <span id="system-name" class="system-name"></span>
+            </div>
 
-        <div class="actions">
-            <button id="btn-capture-client" class="btn btn-primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span>Cattura Cliente</span>
-            </button>
+            <!-- Auto-detection status -->
+            <div id="autodetect-status" class="autodetect-status hidden">
+                <div class="autodetect-icon">🔔</div>
+                <div class="autodetect-info">
+                    <span class="autodetect-label">Rilevamento automatico ricevute</span>
+                    <span class="autodetect-count"><span id="pattern-count">0</span> URL configurate</span>
+                </div>
+                <div id="autodetect-indicator" class="autodetect-dot active" title="Attivo"></div>
+            </div>
 
-            <button id="btn-capture-transfer" class="btn btn-success">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="1" x2="12" y2="23" />
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-                <span>Cattura Trasferimento</span>
-            </button>
-
-            <button id="btn-capture-both" class="btn btn-accent">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <line x1="12" y1="8" x2="12" y2="16" />
-                    <line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-                <span>Cattura Tutto</span>
-            </button>
-        </div>
-
-        <div id="preview-section" class="preview-section hidden">
-            <h3>Dati Catturati</h3>
-            <div id="preview-data" class="preview-data"></div>
-            <div class="preview-actions">
-                <button id="btn-send" class="btn btn-primary btn-small">
-                    Invia a SafeTransfer
+            <div class="actions">
+                <button id="btn-capture-client" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span>Cattura Cliente</span>
                 </button>
-                <button id="btn-cancel" class="btn btn-secondary btn-small">
-                    Annulla
+
+                <button id="btn-capture-transfer" class="btn btn-success">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                    <span>Cattura Trasferimento</span>
+                </button>
+
+                <button id="btn-capture-both" class="btn btn-accent">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <line x1="12" y1="8" x2="12" y2="16" />
+                        <line x1="8" y1="12" x2="16" y2="12" />
+                    </svg>
+                    <span>Cattura Tutto</span>
                 </button>
             </div>
+
+            <div id="preview-section" class="preview-section hidden">
+                <h3>Dati Catturati</h3>
+                <div id="preview-data" class="preview-data"></div>
+                <div class="preview-actions">
+                    <button id="btn-send" class="btn btn-primary btn-small">
+                        Invia a SafeTransfer
+                    </button>
+                    <button id="btn-cancel" class="btn btn-secondary btn-small">
+                        Annulla
+                    </button>
+                </div>
+            </div>
+
+            <div class="manual-section">
+                <button id="btn-manual" class="btn btn-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    Inserimento Manuale
+                </button>
+            </div>
+
+            <footer>
+                <a href="#" id="open-app">
+                    Apri SafeTransfer
+                </a>
+            </footer>
         </div>
 
-        <div class="manual-section">
-            <button id="btn-manual" class="btn btn-link">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Inserimento Manuale
-            </button>
-        </div>
+        <!-- ===== SETTINGS VIEW ===== -->
+        <div id="settings-view" class="hidden">
+            <div class="settings-header">
+                <button id="btn-back" class="btn-icon" title="Indietro">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5" />
+                        <path d="M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <h2>Impostazioni</h2>
+            </div>
 
-        <footer>
-            <a href="https://safetransfer.it" target="_blank" id="open-app">
-                Apri SafeTransfer
-            </a>
-        </footer>
+            <!-- SafeTransfer URL -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                    URL SafeTransfer
+                </div>
+                <input type="url" id="setting-url" class="settings-input" placeholder="https://safetransfer.it" />
+                <p class="settings-hint">L'indirizzo della tua piattaforma SafeTransfer</p>
+            </div>
+
+            <!-- Auto-detection toggle -->
+            <div class="settings-section">
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-section-title" style="margin-bottom:2px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            </svg>
+                            Promemoria automatico
+                        </div>
+                        <p class="settings-hint" style="margin-top:0;">Mostra notifica quando arrivi alla pagina
+                            ricevuta</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-autodetect" checked />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Receipt URL Patterns -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    URL Pagine Ricevuta
+                </div>
+                <p class="settings-hint">
+                    Aggiungi le URL delle pagine di stampa ricevuta. Quando arrivi a una di queste pagine,
+                    l'estensione ti ricorderà di esportare i dati. Usa <code>*</code> come wildcard.
+                </p>
+
+                <div id="url-list" class="url-list">
+                    <!-- URLs will be rendered here -->
+                </div>
+
+                <div class="add-url-section">
+                    <input type="text" id="new-url-input" class="settings-input"
+                        placeholder="es: *://*.westernunion.com/*/receipt*" />
+                    <button id="btn-add-url" class="btn btn-primary btn-small btn-add">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Aggiungi
+                    </button>
+                </div>
+
+                <!-- Quick add presets -->
+                <div class="presets-section">
+                    <span class="presets-label">Aggiungi veloci:</span>
+                    <div class="presets-grid">
+                        <button class="preset-btn" data-system="western_union"
+                            title="Aggiungi URL Western Union">WU</button>
+                        <button class="preset-btn" data-system="ria" title="Aggiungi URL Ria">Ria</button>
+                        <button class="preset-btn" data-system="moneygram" title="Aggiungi URL MoneyGram">MG</button>
+                        <button class="preset-btn" data-system="mondial_bony"
+                            title="Aggiungi URL Mondial Bony">MB</button>
+                        <button class="preset-btn" data-system="monty" title="Aggiungi URL Monty">Monty</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reset -->
+            <div class="settings-section">
+                <button id="btn-reset-urls" class="btn btn-secondary btn-small" style="width:100%;">
+                    🔄 Ripristina URL predefinite
+                </button>
+            </div>
+
+            <!-- Save status -->
+            <div id="settings-save-status" class="settings-save-status hidden">
+                ✓ Salvato
+            </div>
+        </div>
     </div>
 
     <script src="popup.js"></script>

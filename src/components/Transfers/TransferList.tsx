@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Plus, Calendar, DollarSign, CreditCard, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Calendar, DollarSign, CreditCard, AlertTriangle, CheckCircle, Clock, ArrowRightLeft } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTranslation, Language } from '../../lib/i18n';
+import { Button, Card, SkeletonTable, EmptyState, Badge } from '../ui';
+import { motion } from 'framer-motion';
+
 type Transfer = {
   id: string;
   amount: number;
@@ -72,7 +75,6 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
       if (error) throw error;
       setTransfers((data || []) as unknown as Transfer[]);
 
-      // Load eligibility for unique clients
       const clientMap = new Map<string, string>();
       ((data || []) as any[]).forEach((t) => {
         if (t.clients?.id && t.clients?.document_number) {
@@ -101,86 +103,104 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <Badge variant="success">{t(`transfers.${status}`)}</Badge>;
+      case 'pending':
+        return <Badge variant="warning">{t(`transfers.${status}`)}</Badge>;
+      case 'cancelled':
+        return <Badge variant="danger">{t(`transfers.${status}`)}</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-slate-600">{t('common.loading')}</div>
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <div className="h-10 w-48 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
+          <div className="h-10 w-40 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
+        </div>
+        <SkeletonTable rows={6} columns={9} />
       </div>
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-slate-100 text-slate-800';
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-slate-900">{t('transfers.title')}</h1>
-        <button
-          onClick={onNewTransfer}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        <motion.h1
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-3xl font-bold text-slate-900 dark:text-white"
         >
-          <Plus className="w-5 h-5" />
+          {t('transfers.title')}
+        </motion.h1>
+        <Button onClick={onNewTransfer} leftIcon={<Plus className="w-5 h-5" />}>
           {t('transfers.newTransfer')}
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <Card padding="none" className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-surface-secondary dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {t('common.date')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {t('clients.fullName')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {t('transfers.amount')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {t('transfers.destinationCountry')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {t('transfers.transferSystem')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {t('transfers.recipientName')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {t('common.status')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {t('transfers.nextAllowedDate')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Estado del Límite
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {transfers.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-8 text-center text-slate-500">
-                    {t('transfers.newTransfer')}
+                  <td colSpan={9}>
+                    <EmptyState
+                      icon={ArrowRightLeft}
+                      title={t('transfers.noTransfers') || 'Sin transferencias'}
+                      description="Empieza registrando tu primera transferencia"
+                      actionLabel={t('transfers.newTransfer')}
+                      onAction={onNewTransfer}
+                    />
                   </td>
                 </tr>
               ) : (
-                transfers.map((transfer) => (
-                  <tr key={transfer.id} className="hover:bg-slate-50 transition-colors">
+                transfers.map((transfer, index) => (
+                  <motion.tr
+                    key={transfer.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    className="hover:bg-surface-secondary dark:hover:bg-slate-800/50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 text-sm text-slate-900">
+                      <div className="flex items-center gap-2 text-sm text-slate-900 dark:text-white">
                         <Calendar className="w-4 h-4 text-slate-400" />
                         {new Date(transfer.transfer_date).toLocaleDateString(
                           language === 'it' ? 'it-IT' : language === 'en' ? 'en-US' : 'es-ES'
@@ -188,33 +208,33 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-slate-900">{transfer.clients?.full_name}</div>
-                      <div className="text-sm text-slate-500 font-mono">
+                      <div className="font-medium text-slate-900 dark:text-white">{transfer.clients?.full_name}</div>
+                      <div className="text-sm text-slate-500 dark:text-slate-400 font-mono">
                         {transfer.clients?.document_number}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-1 font-semibold text-slate-900">
+                      <div className="flex items-center gap-1 font-semibold text-slate-900 dark:text-white">
                         <DollarSign className="w-4 h-4 text-slate-400" />€
                         {transfer.amount.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                       </div>
                       {transfer.commission_amount != null && transfer.commission_amount > 0 && (
-                        <div className="text-xs text-slate-500 mt-1">
-                          Com: €{(transfer.commission_amount).toFixed(2)}{' '}
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          Com: €{transfer.commission_amount.toFixed(2)}{' '}
                           {transfer.commission_included ? '(incluida)' : '(aparte)'}
                           <br />
-                          <span className="font-medium text-blue-600">
+                          <span className="font-medium text-brand-600 dark:text-brand-400">
                             Neto: €{(transfer.net_amount ?? transfer.amount).toFixed(2)}
                           </span>
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-600">{transfer.destination_country}</span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">{transfer.destination_country}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {transfer.transfer_system ? (
-                        <div className="flex items-center gap-1 text-sm text-blue-600 font-medium">
+                        <div className="flex items-center gap-1 text-sm text-brand-600 dark:text-brand-400 font-medium">
                           <CreditCard className="w-4 h-4" />
                           {t(`transferSystem.${transfer.transfer_system}`)}
                         </div>
@@ -223,19 +243,11 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-600">{transfer.recipient_name}</span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">{transfer.recipient_name}</span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(transfer.status)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                          transfer.status
-                        )}`}
-                      >
-                        {t(`transfers.${transfer.status}`)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-600">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">
                         {new Date(transfer.next_allowed_date).toLocaleDateString(
                           language === 'it' ? 'it-IT' : language === 'en' ? 'en-US' : 'es-ES'
                         )}
@@ -254,11 +266,11 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
                         if (canSend) {
                           return (
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                              <Badge variant="success" size="sm">
                                 <CheckCircle className="w-3 h-3" />
                                 Puede enviar
-                              </span>
-                              <span className="text-xs text-slate-500">
+                              </Badge>
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
                                 €{eligibility.amount_available.toFixed(2)}
                               </span>
                             </div>
@@ -266,12 +278,12 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
                         } else {
                           return (
                             <div className="flex flex-col gap-1">
-                              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 w-fit">
+                              <Badge variant="danger" size="sm">
                                 <AlertTriangle className="w-3 h-3" />
                                 Límite alcanzado
-                              </span>
+                              </Badge>
                               {eligibility.days_until_available > 0 && (
-                                <span className="inline-flex items-center gap-1 text-xs text-red-600 font-medium">
+                                <span className="inline-flex items-center gap-1 text-xs text-danger-600 font-medium">
                                   <Clock className="w-3 h-3" />
                                   {eligibility.days_until_available} {eligibility.days_until_available === 1 ? 'día' : 'días'}
                                 </span>
@@ -281,13 +293,13 @@ export function TransferList({ businessId, language, onNewTransfer }: TransferLi
                         }
                       })()}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

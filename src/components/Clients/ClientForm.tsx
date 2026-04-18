@@ -176,7 +176,7 @@ export function ClientForm({ businessId, language, client, onClose, onSaved }: C
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">
             {client ? t('clients.edit') : t('clients.addNew')}
@@ -236,7 +236,7 @@ export function ClientForm({ businessId, language, client, onClose, onSaved }: C
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -328,7 +328,7 @@ export function ClientForm({ businessId, language, client, onClose, onSaved }: C
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <CountrySelect
                 value={formData.nationality || ''}
                 onChange={(value) => setFormData({ ...formData, nationality: value })}

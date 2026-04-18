@@ -132,7 +132,7 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full my-8">
+      <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full my-8 overflow-x-hidden">
         <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-xl z-10">
           <h2 className="text-2xl font-bold text-slate-900">{t('clients.clientDetails')}</h2>
           <button
@@ -143,7 +143,7 @@ export function ClientDetails({ client, businessId, userId, language, onClose, o
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+        <div className="p-4 sm:p-6 space-y-6 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-200px)]">
           {eligibility && (
             <div
               className={`rounded-xl p-4 sm:p-6 border-2 ${eligibility.can_transfer

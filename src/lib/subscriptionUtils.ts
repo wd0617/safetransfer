@@ -1,10 +1,10 @@
 import { translations, Language } from './i18n';
 
-type Subscription = {
+export type Subscription = {
   id: string;
   business_id: string;
   plan?: string | null;
-  status?: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
+  status?: 'active' | 'trial' | 'suspended' | 'cancelled' | 'pending' | null;
   current_period_end?: string | null;
   is_trial?: boolean | null;
   trial_end_date?: string | null;

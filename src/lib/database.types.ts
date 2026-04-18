@@ -17,11 +17,11 @@ export type BusinessRow = {
   logo_url: string | null;
   primary_color: string | null;
   secondary_color: string | null;
-  subscription_status: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
+  subscription_status: 'active' | 'trial' | 'suspended' | 'cancelled' | 'pending' | null;
   subscription_expires_at: string | null;
   created_at: string | null;
   updated_at: string | null;
-  status: 'active' | 'trial' | 'blocked' | 'inactive' | null;
+  status: 'active' | 'trial' | 'blocked' | 'inactive' | 'pending_approval' | 'rejected' | null;
   last_activity_at: string | null;
   blocked_reason: string | null;
   blocked_at: string | null;
@@ -47,7 +47,7 @@ export type SubscriptionRow = {
   business_id: string;
   plan: string | null;
   plan_type: string | null;
-  status: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
+  status: 'active' | 'trial' | 'suspended' | 'cancelled' | 'pending' | null;
   current_period_end: string | null;
   is_trial: boolean | null;
   trial_start_date: string | null;
@@ -65,7 +65,7 @@ export type ClientRow = {
   id: string;
   business_id: string;
   full_name: string;
-  document_type: 'passport' | 'id_card' | 'residence_permit' | 'drivers_license';
+  document_type: 'passport' | 'id_card' | 'residence_permit' | 'drivers_license' | 'other';
   document_number: string;
   document_country: string;
   document_expiry: string | null;
@@ -116,7 +116,7 @@ export type CredentialChangeLogRow = {
   business_id: string;
   change_type: 'password' | 'email' | 'role';
   changed_by: string;
-  changed_by_role: 'user' | 'superadmin';
+  changed_by_role: 'user' | 'superadmin' | 'system';
   ip_address: string | null;
   user_agent: string | null;
   notification_sent: boolean | null;
@@ -129,7 +129,7 @@ export type PasswordChangeRequestRow = {
   user_id: string;
   business_id: string;
   email: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
   request_token: string;
   ip_address: string | null;
   user_agent: string | null;
@@ -139,8 +139,8 @@ export type PasswordChangeRequestRow = {
 export type SuperadminRequestRow = {
   id: string;
   request_type: string;
-  status: 'pending' | 'approved' | 'rejected';
-  priority: 'low' | 'medium' | 'high';
+  status: 'pending' | 'in_progress' | 'resolved' | 'rejected';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   business_id: string;
   user_id: string;
   title: string;
@@ -215,7 +215,7 @@ export type AdminNotificationRow = {
   notification_type: string;
   title: string;
   message: string;
-  priority: 'normal' | 'high' | 'urgent';
+  priority: 'low' | 'normal' | 'high' | 'critical';
   is_read: boolean | null;
   created_at: string | null;
 };
@@ -249,7 +249,7 @@ export type PaymentRow = {
   business_id: string;
   subscription_id: string | null;
   amount: number;
-  status: 'pending' | 'paid' | 'failed' | 'refunded';
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
   payment_date: string;
   due_date: string | null;
   payment_method: string | null;
@@ -354,7 +354,7 @@ export interface Database {
           user_id: string;
           business_id: string;
           email: string;
-          status: 'pending' | 'approved' | 'rejected';
+          status: PasswordChangeRequestRow['status'];
           request_token: string;
         };
         Update: Partial<PasswordChangeRequestRow>;
@@ -364,8 +364,8 @@ export interface Database {
         Row: SuperadminRequestRow;
         Insert: Partial<SuperadminRequestRow> & {
           request_type: string;
-          status: 'pending' | 'approved' | 'rejected';
-          priority: 'low' | 'medium' | 'high';
+          status: SuperadminRequestRow['status'];
+          priority: SuperadminRequestRow['priority'];
           business_id: string;
           user_id: string;
           title: string;
@@ -458,7 +458,7 @@ export interface Database {
         Insert: Partial<PaymentRow> & {
           business_id: string;
           amount: number;
-          status: 'pending' | 'paid' | 'failed' | 'refunded';
+          status: PaymentRow['status'];
           payment_date: string;
         };
         Update: Partial<PaymentRow>;

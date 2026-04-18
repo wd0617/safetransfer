@@ -14,7 +14,9 @@ export interface RateLimitConfig {
 
 export const RATE_LIMITS: Record<string, RateLimitConfig> = {
   login: { maxAttempts: 5, windowMinutes: 15 },
+  signup: { maxAttempts: 3, windowMinutes: 30 },
   password_reset: { maxAttempts: 3, windowMinutes: 60 },
+  forgot_password: { maxAttempts: 3, windowMinutes: 60 },
   transfer_create: { maxAttempts: 10, windowMinutes: 60 },
   client_export: { maxAttempts: 5, windowMinutes: 60 },
   sensitive_view: { maxAttempts: 50, windowMinutes: 60 },

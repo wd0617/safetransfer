@@ -7,6 +7,7 @@ import {
   getSecurityContext,
   trackSession,
 } from '../lib/security';
+import type { Subscription } from '../lib/subscriptionUtils';
 
 type BusinessUser = {
   id: string;
@@ -26,15 +27,6 @@ type Business = {
   status?: 'active' | 'trial' | 'blocked' | 'inactive' | 'pending_approval' | 'rejected' | null;
   [key: string]: unknown;
 };
-type Subscription = {
-  id: string;
-  business_id: string;
-  status?: 'active' | 'trial' | 'suspended' | 'cancelled' | null;
-  is_trial?: boolean | null;
-  trial_end_date?: string | null;
-  next_payment_date?: string | null;
-};
-
 interface AuthContextType {
   user: User | null;
   businessUser: BusinessUser | null;
@@ -241,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           emailRedirectTo: window.location.origin,
+          ...(extraData?.captchaToken ? { captchaToken: extraData.captchaToken } : {}),
         },
       });
 

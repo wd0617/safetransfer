@@ -1,18 +1,20 @@
 {
     "manifest_version": 3,
     "name": "SafeTransfer - Cattura Automatica",
-    "version": "1.0.0",
-    "description": "Cattura automatica dei dati di clienti e trasferimenti da Western Union, Ria, MoneyGram, Mondial Bony e Monty",
+    "version": "1.1.0",
+    "description": "Cattura automatica dei dati di clienti e trasferimenti da Western Union, Ria, MoneyGram, Mondial Bony e Monty. Promemoria automatico per esportare dati quando arrivi alla pagina ricevuta.",
     "permissions": [
         "activeTab",
         "tabs",
         "storage",
-        "scripting"
+        "scripting",
+        "notifications"
     ],
     "host_permissions": [
         "https://*.westernunion.com/*",
         "https://*.westernunion.it/*",
         "https://*.riamoneytransfer.com/*",
+        "https://*.ria.com/*",
         "https://*.moneygram.com/*",
         "https://*.moneygram.it/*",
         "https://*.mondialbony.com/*",
@@ -20,7 +22,8 @@
         "https://*.monty.it/*",
         "https://safetransfer-pi.vercel.app/*",
         "https://safetransfer.it/*",
-        "https://www.safetransfer.it/*"
+        "https://www.safetransfer.it/*",
+        "http://localhost:*/*"
     ],
     "action": {
         "default_popup": "popup.html",
@@ -43,10 +46,12 @@
                 "https://*.westernunion.com/*",
                 "https://*.westernunion.it/*",
                 "https://*.riamoneytransfer.com/*",
+                "https://*.ria.com/*",
                 "https://*.moneygram.com/*",
                 "https://*.moneygram.it/*",
                 "https://*.mondialbony.com/*",
-                "https://*.mondialbonyservice.it/*"
+                "https://*.mondialbonyservice.it/*",
+                "https://*.monty.it/*"
             ],
             "js": [
                 "content.js"
